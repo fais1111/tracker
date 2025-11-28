@@ -24,7 +24,7 @@ interface ColumnImportFormProps {
 }
 
 // All fields are updatable.
-const columnMapping: { [key: string]: keyof Module } = {
+const columnMapping: { [key: string]: keyof Omit<Module, 'id'> } = {
   'Yard': 'yard',
   'Location': 'location',
   'Module No.': 'moduleNo',
@@ -108,7 +108,7 @@ export function ColumnImportForm({ setOpen }: ColumnImportFormProps) {
             
             // Set the fields we know
             newModule.moduleNo = moduleNo;
-            newModule[targetField] = value;
+            newModule[targetField] = value as any; // Cast as any because targetField is dynamic
 
             batch.set(docRef, newModule);
             createdCount++;
