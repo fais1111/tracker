@@ -2,7 +2,6 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { detectAnomalies } from "@/ai/flows/anomaly-detection";
 import type { Module } from "./types";
 import { initialModules } from "./data"; // In a real app, this would be a database client.
 
@@ -20,13 +19,13 @@ const moduleSchema = z.object({
 });
 
 // This is a mock database. In a real application, you would use a real database.
-let modules: Module[] = [...initialModules];
+let modules: Omit<Module, 'isAnomaly' | 'anomalyExplanation'>[] = [...initialModules];
 
 export async function getModules(): Promise<Module[]> {
   // In a real app, you'd fetch from a database.
   // We add a delay to simulate network latency.
   await new Promise(resolve => setTimeout(resolve, 1000));
-  return modules;
+  return modules as Module[];
 }
 
 export async function updateModule(data: z.infer<typeof moduleSchema>) {
@@ -47,34 +46,16 @@ export async function updateModule(data: z.infer<typeof moduleSchema>) {
   }
 
   const existingModule = modules[moduleIndex];
-  
-  const combinedProgressNotes = [
-    moduleData.yardReport,
-    moduleData.islandReport,
-    `Updated by: ${moduleData.byWhom || "N/A"}`,
-  ]
-    .filter(Boolean)
-    .join(" | ");
 
-  const anomalyResult = await detectAnomalies({
-    yard: moduleData.yard,
-    location: moduleData.location,
-    moduleNo: moduleData.moduleNo,
-    rfloDateStatus: moduleData.rfloDateStatus,
-    progressNotes: combinedProgressNotes,
-  });
-
-  const updatedModule: Module = {
+  const updatedModule = {
     ...existingModule,
     ...moduleData,
     rfloDate: moduleData.rfloDate || existingModule.rfloDate,
-    isAnomaly: anomalyResult.isAnomaly,
-    anomalyExplanation: anomalyResult.anomalyExplanation,
   };
 
   modules[moduleIndex] = updatedModule;
   
-  revalidatePath("/dashboard");
+  revalidatePath("/");
 
   return { success: true, data: updatedModule };
 }
@@ -89,15 +70,13 @@ export async function addModule(data: Omit<z.infer<typeof moduleSchema>, "id">) 
   }
   
   const newModuleData = validation.data;
-  const newModule: Module = {
+  const newModule: Omit<Module, 'isAnomaly' | 'anomalyExplanation'> = {
     id: (modules.length + 1).toString(),
     ...newModuleData,
     rfloDate: newModuleData.rfloDate || '',
-    isAnomaly: false,
-    anomalyExplanation: '',
   };
 
   modules.unshift(newModule); // Add to the beginning of the array
-  revalidatePath("/dashboard");
+  revalidatePath("/");
   return { success: true, data: newModule };
 }

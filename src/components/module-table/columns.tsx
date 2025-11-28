@@ -2,11 +2,10 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
-import { AlertTriangle, ArrowUpDown } from "lucide-react";
+import { ArrowUpDown } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { DataTableRowActions } from "./data-table-row-actions";
 import type { Module } from "@/lib/types";
 
@@ -25,22 +24,9 @@ export const columns: ColumnDef<Module>[] = [
       );
     },
     cell: ({ row }) => {
-      const { isAnomaly, anomalyExplanation } = row.original;
       return (
         <div className="flex items-center gap-2">
-          {isAnomaly && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger>
-                  <AlertTriangle className="h-5 w-5 text-destructive" />
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p className="max-w-xs">{anomalyExplanation}</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
-          <span className={isAnomaly ? "font-semibold" : ""}>{row.getValue("moduleNo")}</span>
+          <span>{row.getValue("moduleNo")}</span>
         </div>
       );
     },

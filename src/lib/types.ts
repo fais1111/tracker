@@ -9,6 +9,4 @@ export type Module = {
   yardReport: string;
   islandReport: string;
   byWhom: string;
-  isAnomaly: boolean;
-  anomalyExplanation: string;
 };

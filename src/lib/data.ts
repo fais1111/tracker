@@ -1,6 +1,6 @@
 import type { Module } from '@/lib/types';
 
-export const initialModules: Module[] = [
+export const initialModules: Omit<Module, 'isAnomaly' | 'anomalyExplanation'>[] = [
   {
     id: '1',
     yard: 'TCNMK',
@@ -12,8 +12,6 @@ export const initialModules: Module[] = [
     yardReport: '',
     islandReport: '',
     byWhom: '',
-    isAnomaly: false,
-    anomalyExplanation: '',
   },
   {
     id: '2',
@@ -26,8 +24,6 @@ export const initialModules: Module[] = [
     yardReport: '',
     islandReport: '',
     byWhom: '',
-    isAnomaly: false,
-    anomalyExplanation: '',
   },
   {
     id: '3',
@@ -40,8 +36,6 @@ export const initialModules: Module[] = [
     yardReport: '',
     islandReport: '',
     byWhom: '',
-    isAnomaly: false,
-    anomalyExplanation: '',
   },
   {
     id: '4',
@@ -54,8 +48,6 @@ export const initialModules: Module[] = [
     yardReport: '',
     islandReport: '',
     byWhom: '',
-    isAnomaly: false,
-    anomalyExplanation: '',
   },
   {
     id: '5',
@@ -68,8 +60,6 @@ export const initialModules: Module[] = [
     yardReport: '',
     islandReport: '',
     byWhom: '',
-    isAnomaly: false,
-    anomalyExplanation: '',
   },
   {
     id: '6',
@@ -82,8 +72,6 @@ export const initialModules: Module[] = [
     yardReport: '',
     islandReport: '',
     byWhom: '',
-    isAnomaly: false,
-    anomalyExplanation: '',
   },
   {
     id: '7',
@@ -96,8 +84,6 @@ export const initialModules: Module[] = [
     yardReport: '',
     islandReport: '',
     byWhom: '',
-    isAnomaly: false,
-    anomalyExplanation: '',
   },
   {
     id: '8',
@@ -110,8 +96,6 @@ export const initialModules: Module[] = [
     yardReport: '27.11.2025 PRADEEP IN PROGRESS',
     islandReport: '',
     byWhom: '',
-    isAnomaly: false,
-    anomalyExplanation: '',
   },
   {
     id: '9',
@@ -124,8 +108,6 @@ export const initialModules: Module[] = [
     yardReport: '',
     islandReport: '28.11.2025 FAIS IN PROGRESS',
     byWhom: '',
-    isAnomaly: false,
-    anomalyExplanation: '',
   },
   {
     id: '10',
@@ -138,8 +120,6 @@ export const initialModules: Module[] = [
     yardReport: '',
     islandReport: '',
     byWhom: '',
-    isAnomaly: false,
-    anomalyExplanation: '',
   },
   {
     id: '11',
@@ -152,8 +132,6 @@ export const initialModules: Module[] = [
     yardReport: '',
     islandReport: '',
     byWhom: '',
-    isAnomaly: false,
-    anomalyExplanation: '',
   },
   {
     id: '12',
@@ -166,8 +144,6 @@ export const initialModules: Module[] = [
     yardReport: '25.11.2025 PRADEEP IN PROGRESS',
     islandReport: '',
     byWhom: '',
-    isAnomaly: false,
-    anomalyExplanation: '',
   },
   {
     id: '13',
@@ -180,8 +156,6 @@ export const initialModules: Module[] = [
     yardReport: '',
     islandReport: '',
     byWhom: '',
-    isAnomaly: false,
-    anomalyExplanation: '',
   },
   {
     id: '14',
@@ -194,8 +168,6 @@ export const initialModules: Module[] = [
     yardReport: '27.11.2025 PRADEEP IN PROGRESS',
     islandReport: '',
     byWhom: '',
-    isAnomaly: false,
-    anomalyExplanation: '',
   },
   {
     id: '15',
@@ -208,8 +180,6 @@ export const initialModules: Module[] = [
     yardReport: '',
     islandReport: '',
     byWhom: '',
-    isAnomaly: false,
-    anomalyExplanation: '',
   },
   {
     id: '16',
@@ -222,8 +192,6 @@ export const initialModules: Module[] = [
     yardReport: '',
     islandReport: '',
     byWhom: '',
-    isAnomaly: false,
-    anomalyExplanation: '',
   },
   {
     id: '17',
@@ -236,8 +204,6 @@ export const initialModules: Module[] = [
     yardReport: '',
     islandReport: '',
     byWhom: '',
-    isAnomaly: false,
-    anomalyExplanation: '',
   },
   {
     id: '18',
@@ -250,8 +216,6 @@ export const initialModules: Module[] = [
     yardReport: '',
     islandReport: '',
     byWhom: '',
-    isAnomaly: false,
-    anomalyExplanation: '',
   },
   {
     id: '19',
@@ -264,8 +228,6 @@ export const initialModules: Module[] = [
     yardReport: '',
     islandReport: '',
     byWhom: '',
-    isAnomaly: false,
-    anomalyExplanation: '',
   },
   {
     id: '20',
@@ -278,8 +240,6 @@ export const initialModules: Module[] = [
     yardReport: '',
     islandReport: '',
     byWhom: '',
-    isAnomaly: false,
-    anomalyExplanation: '',
   },
   {
     id: '21',
@@ -292,7 +252,5 @@ export const initialModules: Module[] = [
     yardReport: '',
     islandReport: '',
     byWhom: '',
-    isAnomaly: false,
-    anomalyExplanation: '',
   },
 ];

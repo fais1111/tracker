@@ -75,11 +75,6 @@ export function ModuleForm({ module, setOpen }: ModuleFormProps) {
         setOpen(false);
         toast({
           title: `Module ${module ? "updated" : "added"} successfully.`,
-          description: result.data.isAnomaly
-            ? `Anomaly Detected: ${result.data.anomalyExplanation}`
-            : "No anomalies were detected in the update.",
-          variant: result.data.isAnomaly ? "destructive" : "default",
-          duration: result.data.isAnomaly ? 9000 : 5000,
         });
       } else {
         toast({

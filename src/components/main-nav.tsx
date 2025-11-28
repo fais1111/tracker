@@ -15,7 +15,7 @@ interface MainNavProps {
 export function MainNav({ items }: MainNavProps) {
   return (
     <div className="flex gap-6 md:gap-10">
-      <Link href="/dashboard" className="flex items-center space-x-2">
+      <Link href="/" className="flex items-center space-x-2">
         <Icons.logo className="h-6 w-6 text-primary" />
         <span className="inline-block font-bold">ModuleTrack</span>
       </Link>
