@@ -48,18 +48,12 @@ export function ModuleForm({ module, setOpen }: ModuleFormProps) {
         title: `Module ${isEditing ? 'updated' : 'created'} successfully.`,
       });
       setOpen(false);
-    } else if (state.message) {
-      toast({
-        title: 'An error occurred',
-        description: state.message,
-        variant: 'destructive',
-      });
-    } else if (state.errors && state.errors.length > 0) {
-       toast({
-        title: 'Validation Error',
-        description: 'Please check the form fields for errors.',
-        variant: 'destructive',
-      });
+    } else if (!state.success && (state.message || (state.errors && state.errors.length > 0))) {
+        toast({
+            title: 'An error occurred',
+            description: state.message || 'Please check the form for errors.',
+            variant: 'destructive',
+        });
     }
   }, [state, isEditing, setOpen, toast]);
 

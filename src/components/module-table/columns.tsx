@@ -53,11 +53,12 @@ export const columns: ColumnDef<Module>[] = [
     accessorKey: "rfloDate",
     header: "RFLO Date",
     cell: ({ row }) => {
-      const date = row.getValue("rfloDate");
-      if (!date) return <span className="text-muted-foreground">N/A</span>;
+      const dateString = row.getValue("rfloDate") as string;
+      if (!dateString) return <span className="text-muted-foreground">N/A</span>;
       try {
-        const d = new Date(date as string);
-        const utcDate = new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + 1);
+        // The date is YYYY-MM-DD. We need to parse it as UTC to avoid timezone shifts.
+        const [year, month, day] = dateString.split('-').map(Number);
+        const utcDate = new Date(Date.UTC(year, month - 1, day));
         return <span>{format(utcDate, "dd-MMM-yy")}</span>;
       } catch (e) {
         return <span className="text-destructive">Invalid Date</span>
