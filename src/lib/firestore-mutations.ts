@@ -1,10 +1,8 @@
 'use client';
 
 import {
-  collection,
-  addDoc,
-  updateDoc,
   doc,
+  updateDoc,
   deleteDoc,
   type Firestore,
   setDoc,
@@ -18,13 +16,27 @@ import { FirestorePermissionError } from '@/firebase/errors';
 export const createModule = (firestore: Firestore, moduleData: Omit<Module, 'id'>) => {
   // Use moduleNo as the document ID for easy lookup and to prevent duplicates
   const moduleRef = doc(firestore, 'modules', moduleData.moduleNo);
+
+  const fullModuleData: Omit<Module, 'id'> = {
+    yard: '',
+    location: '',
+    moduleNo: '',
+    shipmentDate: '',
+    shipmentNo: '',
+    rfloDateStatus: '',
+    yardReport: '',
+    islandReport: '',
+    combinedReport: '',
+    signed: '',
+    ...moduleData
+  };
   
-  setDoc(moduleRef, moduleData).catch(error => {
+  setDoc(moduleRef, fullModuleData).catch(error => {
     console.error("Error creating module: ", error);
     const permissionError = new FirestorePermissionError({
         path: moduleRef.path,
         operation: 'create',
-        requestResourceData: moduleData,
+        requestResourceData: fullModuleData,
     });
     errorEmitter.emit('permission-error', permissionError);
     // Re-throw or handle as needed, for example, show a toast to the user

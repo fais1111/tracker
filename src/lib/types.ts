@@ -6,4 +6,8 @@ export type Module = {
   shipmentDate: string;
   shipmentNo: string;
   rfloDateStatus: string;
+  yardReport: string;
+  islandReport: string;
+  combinedReport: string;
+  signed: string;
 };

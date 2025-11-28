@@ -1,7 +1,7 @@
 'use client';
 
 import { useTransition } from 'react';
-import { doc, getDoc, setDoc, writeBatch } from 'firebase/firestore';
+import { doc, getDoc, writeBatch } from 'firebase/firestore';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore } from '@/firebase';
@@ -30,7 +30,11 @@ const columnMapping: { [key: string]: keyof Omit<Module, 'id'> } = {
   'Module No.': 'moduleNo',
   'Shipment Date': 'shipmentDate',
   'Shipment No#': 'shipmentNo',
-  'RFLO Date Status': 'rfloDateStatus'
+  'RFLO Date Status': 'rfloDateStatus',
+  'Yard Report': 'yardReport',
+  'Island Report': 'islandReport',
+  'Combined Report': 'combinedReport',
+  'Signed': 'signed',
 };
 
 export function ColumnImportForm({ setOpen }: ColumnImportFormProps) {
@@ -103,7 +107,11 @@ export function ColumnImportForm({ setOpen }: ColumnImportFormProps) {
                 location: '',
                 shipmentDate: '',
                 shipmentNo: '',
-                rfloDateStatus: 'Pending'
+                rfloDateStatus: 'Pending',
+                yardReport: '',
+                islandReport: '',
+                combinedReport: '',
+                signed: ''
             };
             
             // Set the fields we know

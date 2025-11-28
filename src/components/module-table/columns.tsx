@@ -6,7 +6,6 @@ import { ArrowUpDown } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { DataTableRowActions } from "./data-table-row-actions";
 import type { Module } from "@/lib/types";
 
@@ -70,6 +69,22 @@ export const columns: ColumnDef<Module>[] = [
         status.toLowerCase() === "date confirmed" ? "default" : status.toLowerCase().includes("quarter") ? "secondary" : "outline";
       return <Badge variant={variant}>{status}</Badge>;
     },
+  },
+  {
+    accessorKey: "yardReport",
+    header: "Yard Report",
+  },
+  {
+    accessorKey: "islandReport",
+    header: "Island Report",
+  },
+  {
+    accessorKey: "combinedReport",
+    header: "Combined Report",
+  },
+  {
+    accessorKey: "signed",
+    header: "Signed",
   },
   {
     id: "actions",

@@ -15,8 +15,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
 import { useFirestore } from '@/firebase';
 
 interface ModuleFormProps {
@@ -118,9 +116,30 @@ export function ModuleForm({ module, setOpen }: ModuleFormProps) {
             </SelectContent>
           </Select>
         </div>
+        <div className="md:col-span-2 border-t pt-4 mt-2">
+            <h4 className="text-sm font-medium mb-2">Reports</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <Label htmlFor="yardReport">Yard Report</Label>
+                    <Input id="yardReport" name="yardReport" defaultValue={module?.yardReport} placeholder="Name - YYYY-MM-DD" />
+                </div>
+                <div>
+                    <Label htmlFor="islandReport">Island Report</Label>
+                    <Input id="islandReport" name="islandReport" defaultValue={module?.islandReport} placeholder="Name - YYYY-MM-DD" />
+                </div>
+                <div>
+                    <Label htmlFor="combinedReport">Combined Report</Label>
+                    <Input id="combinedReport" name="combinedReport" defaultValue={module?.combinedReport} placeholder="Name - YYYY-MM-DD" />
+                </div>
+                <div>
+                    <Label htmlFor="signed">Signed</Label>
+                    <Input id="signed" name="signed" defaultValue={module?.signed} placeholder="Name - YYYY-MM-DD" />
+                </div>
+            </div>
+        </div>
       </div>
       
-      <div className="flex justify-end gap-2">
+      <div className="flex justify-end gap-2 pt-4">
         <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isPending}>
           Cancel
         </Button>
