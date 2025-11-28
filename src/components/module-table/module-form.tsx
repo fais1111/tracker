@@ -43,29 +43,26 @@ export function ModuleForm({ module, setOpen }: ModuleFormProps) {
     
     const formData = new FormData(event.currentTarget);
     const rawData: any = Object.fromEntries(formData.entries());
-    
-    // Convert checkbox value correctly
-    rawData.signedReport = formData.get('signedReport') === 'on';
 
-    // RFLO Date can be empty, ensure it's a string
-    if (!rawData.rfloDate) {
-      rawData.rfloDate = '';
-    }
-    
-    // Shipment Date can be empty, ensure it's a string
-    if (!rawData.shipmentDate) {
-      rawData.shipmentDate = '';
-    }
+    // We don't need the `id` field in the data itself.
+    delete rawData.id;
 
-    startTransition(async () => {
+    startTransition(() => {
       try {
+        const moduleNo = rawData.moduleNo;
+        if (!moduleNo) {
+            throw new Error("Module No. is required.");
+        }
+
         if (isEditing && module?.id) {
-            await updateModule(firestore, module.id, rawData);
+            // For updates, the ID is the original module number.
+            updateModule(firestore, module.id, rawData);
             toast({
                 title: 'Module updated successfully.',
             });
         } else {
-            await createModule(firestore, rawData);
+            // For creation, the data object itself contains the new module number.
+            createModule(firestore, rawData);
             toast({
                 title: 'Module created successfully.',
             });
@@ -84,28 +81,25 @@ export function ModuleForm({ module, setOpen }: ModuleFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {/* The ID for an existing module is its moduleNo */}
       {module && <input type="hidden" name="id" value={module.id} />}
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <Label htmlFor="moduleNo">Module No.</Label>
-          <Input id="moduleNo" name="moduleNo" defaultValue={module?.moduleNo} required />
+          <Input id="moduleNo" name="moduleNo" defaultValue={module?.moduleNo} required disabled={isEditing} />
         </div>
          <div>
           <Label htmlFor="shipmentDate">Shipment Date</Label>
-          <Input id="shipmentDate" name="shipmentDate" type="date" defaultValue={module?.shipmentDate} />
-        </div>
-        <div>
-          <Label htmlFor="rfloDate">RFLO Date</Label>
-          <Input id="rfloDate" name="rfloDate" type="date" defaultValue={module?.rfloDate} />
+          <Input id="shipmentDate" name="shipmentDate" defaultValue={module?.shipmentDate} />
         </div>
         <div>
           <Label htmlFor="yard">Yard</Label>
-          <Input id="yard" name="yard" defaultValue={module?.yard} required />
+          <Input id="yard" name="yard" defaultValue={module?.yard} />
         </div>
         <div>
           <Label htmlFor="location">Location</Label>
-          <Input id="location" name="location" defaultValue={module?.location} required />
+          <Input id="location" name="location" defaultValue={module?.location} />
         </div>
         <div>
           <Label htmlFor="shipmentNo">Shipment No#</Label>
@@ -123,22 +117,6 @@ export function ModuleForm({ module, setOpen }: ModuleFormProps) {
               <SelectItem value="Pending">Pending</SelectItem>
             </SelectContent>
           </Select>
-        </div>
-      </div>
-      
-      <div>
-        <Label htmlFor="yardReport">Yard Report</Label>
-        <Textarea id="yardReport" name="yardReport" defaultValue={module?.yardReport || ''} />
-      </div>
-      <div>
-        <Label htmlFor="islandReport">Island Report</Label>
-        <Textarea id="islandReport" name="islandReport" defaultValue={module?.islandReport || ''} />
-      </div>
-
-      <div className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-        <Checkbox id="signedReport" name="signedReport" defaultChecked={module?.signedReport} />
-        <div className="space-y-1 leading-none">
-          <Label htmlFor="signedReport">Signed Report</Label>
         </div>
       </div>
       

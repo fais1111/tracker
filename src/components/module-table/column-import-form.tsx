@@ -1,6 +1,7 @@
 'use client';
 
 import { useTransition } from 'react';
+import { doc, getDoc, setDoc, writeBatch } from 'firebase/firestore';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useFirestore } from '@/firebase';
@@ -14,20 +15,22 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { collection, addDoc, getDocs, query, where, writeBatch } from 'firebase/firestore';
+import { collection } from 'firebase/firestore';
 import type { Module } from '@/lib/types';
+import { Input } from '../ui/input';
 
 interface ColumnImportFormProps {
   setOpen: (open: boolean) => void;
 }
 
+// All fields are updatable.
 const columnMapping: { [key: string]: keyof Module } = {
-    'Yard': 'yard',
-    'Location': 'location',
-    'Module No.': 'moduleNo',
-    'Shipment Date': 'shipmentDate',
-    'Shipment No#': 'shipmentNo',
-    'RFLO Date Status': 'rfloDateStatus'
+  'Yard': 'yard',
+  'Location': 'location',
+  'Module No.': 'moduleNo',
+  'Shipment Date': 'shipmentDate',
+  'Shipment No#': 'shipmentNo',
+  'RFLO Date Status': 'rfloDateStatus'
 };
 
 export function ColumnImportForm({ setOpen }: ColumnImportFormProps) {
@@ -47,17 +50,29 @@ export function ColumnImportForm({ setOpen }: ColumnImportFormProps) {
     }
     
     const formData = new FormData(event.currentTarget);
+    const moduleNosData = formData.get('moduleNos') as string;
+    const valuesData = formData.get('values') as string;
     const columnKey = formData.get('column') as keyof typeof columnMapping;
-    const data = formData.get('data') as string;
-    const lines = data.split('\n').map(line => line.trim()).filter(line => line);
 
-    if (!columnKey || lines.length === 0) {
+    const moduleNos = moduleNosData.split('\n').map(line => line.trim()).filter(line => line);
+    const values = valuesData.split('\n').map(line => line.trim()).filter(line => line);
+    
+    if (!columnKey || moduleNos.length === 0 || values.length === 0) {
       toast({
         title: 'Invalid input',
-        description: 'Please select a column and paste some data.',
+        description: 'Please select a column and provide data for both Module No. and the target column.',
         variant: 'destructive',
       });
       return;
+    }
+
+    if (moduleNos.length !== values.length) {
+        toast({
+            title: 'Data mismatch',
+            description: 'The number of lines for Module No. and the target column data must be the same.',
+            variant: 'destructive',
+        });
+        return;
     }
     
     const targetField = columnMapping[columnKey];
@@ -69,62 +84,38 @@ export function ColumnImportForm({ setOpen }: ColumnImportFormProps) {
         let updatedCount = 0;
         let createdCount = 0;
 
-        if (targetField === 'moduleNo') {
-            // If importing module numbers, assume we are creating new modules
-            for (const line of lines) {
-                const newModule: Partial<Module> = {
-                    moduleNo: line,
-                    yard: '',
-                    location: '',
-                    shipmentDate: '',
-                    shipmentNo: '',
-                    rfloDateStatus: 'Pending'
-                };
-                const docRef = addDoc(modulesCollection, newModule);
-                // addDoc can't be batched in this way, so we do it individually.
-                await addDoc(modulesCollection, newModule);
-                createdCount++;
-            }
-        } else {
-            // For other columns, we try to update existing docs based on moduleNo
-            // This assumes module numbers already exist. A more robust implementation might be needed.
-            const allDocsSnapshot = await getDocs(modulesCollection);
-            const existingModules = allDocsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() as Module }));
+        for (let i = 0; i < moduleNos.length; i++) {
+          const moduleNo = moduleNos[i];
+          const value = values[i];
+          const docRef = doc(modulesCollection, moduleNo); // Use moduleNo as the document ID
+          
+          const docSnap = await getDoc(docRef);
 
-            if (lines.length !== existingModules.length && existingModules.length > 0) {
-                toast({
-                    variant: 'destructive',
-                    title: 'Data mismatch',
-                    description: `The number of lines pasted (${lines.length}) does not match the number of modules in the database (${existingModules.length}). Please ensure you paste data for all modules.`
-                });
-                return;
-            }
+          if (docSnap.exists()) {
+            // Document exists, update it
+            batch.update(docRef, { [targetField]: value });
+            updatedCount++;
+          } else {
+            // Document doesn't exist, create it with all fields
+            const newModule: Omit<Module, 'id'> = {
+                moduleNo: '',
+                yard: '',
+                location: '',
+                shipmentDate: '',
+                shipmentNo: '',
+                rfloDateStatus: 'Pending'
+            };
+            
+            // Set the fields we know
+            newModule.moduleNo = moduleNo;
+            newModule[targetField] = value;
 
-            if (existingModules.length === 0 && lines.length > 0) {
-                 for (const line of lines) {
-                    const newModule = {
-                        [targetField]: line,
-                        moduleNo: '', // needs to be filled later
-                        yard: '',
-                        location: '',
-                        shipmentDate: '',
-                        shipmentNo: '',
-                        rfloDateStatus: 'Pending'
-                    };
-                    await addDoc(modulesCollection, newModule);
-                    createdCount++;
-                }
-            } else {
-                existingModules.forEach((module, index) => {
-                    if (lines[index] !== undefined) {
-                        const docRef = doc(firestore, 'modules', module.id);
-                        batch.update(docRef, { [targetField]: lines[index] });
-                        updatedCount++;
-                    }
-                });
-                 await batch.commit();
-            }
+            batch.set(docRef, newModule);
+            createdCount++;
+          }
         }
+        
+        await batch.commit();
 
         toast({
           title: 'Import Successful',
@@ -146,10 +137,10 @@ export function ColumnImportForm({ setOpen }: ColumnImportFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <Label htmlFor="column">Target Column</Label>
+        <Label htmlFor="column">Target Column to Update/Create</Label>
         <Select name="column" required>
           <SelectTrigger id="column">
-            <SelectValue placeholder="Select a column to import data into" />
+            <SelectValue placeholder="Select a column" />
           </SelectTrigger>
           <SelectContent>
             {Object.keys(columnMapping).map(key => (
@@ -159,15 +150,27 @@ export function ColumnImportForm({ setOpen }: ColumnImportFormProps) {
         </Select>
       </div>
       
-      <div>
-        <Label htmlFor="data">Pasted Column Data</Label>
-        <Textarea 
-          id="data" 
-          name="data" 
-          required 
-          className="min-h-[200px] font-mono text-sm"
-          placeholder="Paste your data here, one entry per line."
-        />
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="moduleNos">Module No. (One per line)</Label>
+          <Textarea 
+            id="moduleNos" 
+            name="moduleNos" 
+            required 
+            className="min-h-[200px] font-mono text-sm"
+            placeholder="Paste module numbers here."
+          />
+        </div>
+        <div>
+          <Label htmlFor="values">Values for Target Column (One per line)</Label>
+          <Textarea 
+            id="values" 
+            name="values" 
+            required 
+            className="min-h-[200px] font-mono text-sm"
+            placeholder="Paste corresponding values here."
+          />
+        </div>
       </div>
       
       <div className="flex justify-end gap-2">

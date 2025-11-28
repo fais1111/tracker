@@ -7,6 +7,7 @@ import {
   doc,
   deleteDoc,
   type Firestore,
+  setDoc,
 } from 'firebase/firestore';
 import type { Module } from '@/lib/types';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -15,14 +16,13 @@ import { FirestorePermissionError } from '@/firebase/errors';
 
 // Helper function to create a new module
 export const createModule = (firestore: Firestore, moduleData: Omit<Module, 'id'>) => {
-  const modulesCollection = collection(firestore, 'modules');
+  // Use moduleNo as the document ID for easy lookup and to prevent duplicates
+  const moduleRef = doc(firestore, 'modules', moduleData.moduleNo);
   
-  addDoc(modulesCollection, {
-    ...moduleData,
-  }).catch(error => {
+  setDoc(moduleRef, moduleData).catch(error => {
     console.error("Error creating module: ", error);
     const permissionError = new FirestorePermissionError({
-        path: modulesCollection.path,
+        path: moduleRef.path,
         operation: 'create',
         requestResourceData: moduleData,
     });
@@ -35,7 +35,7 @@ export const createModule = (firestore: Firestore, moduleData: Omit<Module, 'id'
 // Helper function to update an existing module
 export const updateModule = (
   firestore: Firestore,
-  moduleId: string,
+  moduleId: string, // moduleId is the moduleNo
   moduleData: Partial<Module>
 ) => {
   const moduleRef = doc(firestore, 'modules', moduleId);
@@ -57,7 +57,7 @@ export const updateModule = (
 
 
 // Helper function to delete a module
-export const deleteModule = (firestore: Firestore, moduleId: string) => {
+export const deleteModule = (firestore: Firestore, moduleId: string) => { // moduleId is the moduleNo
     const moduleRef = doc(firestore, 'modules', moduleId);
 
     deleteDoc(moduleRef).catch(error => {

@@ -63,6 +63,7 @@ export function DataTableRowActions<TData>({
     }
     startTransition(() => {
         try {
+            // The module's ID is its moduleNo
             deleteModule(firestore, module.id);
             toast({
                 title: "Module Deleted",
