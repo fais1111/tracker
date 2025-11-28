@@ -28,7 +28,6 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
           }
           className="h-10 w-[150px] lg:w-[250px]"
         />
-        {/* Add more filters here if needed */}
       </div>
       <div className="flex items-center space-x-2">
         <Button variant="outline" size="sm">

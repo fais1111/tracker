@@ -8,16 +8,15 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { Module } from "@/lib/types";
@@ -49,18 +48,13 @@ export function DataTableRowActions<TData>({
           <DialogTrigger asChild>
             <DropdownMenuItem>Edit</DropdownMenuItem>
           </DialogTrigger>
-          <DropdownMenuItem>Make a copy</DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem className="text-destructive focus:text-destructive">
-            Delete
-          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>Edit Module: {module.moduleNo}</DialogTitle>
           <DialogDescription>
-            Make changes to the module details below. Click save when you're done.
+              Make changes to the module details below. Click save when you're done.
           </DialogDescription>
         </DialogHeader>
         <ModuleForm

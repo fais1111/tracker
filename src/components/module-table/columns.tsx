@@ -3,16 +3,12 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
 import { ArrowUpDown } from "lucide-react";
-import { doc } from "firebase/firestore";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DataTableRowActions } from "./data-table-row-actions";
 import type { Module } from "@/lib/types";
-import { toast } from "@/hooks/use-toast";
-import { updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
-import { useFirestore } from "@/firebase";
 
 export const columns: ColumnDef<Module>[] = [
   {
@@ -60,7 +56,9 @@ export const columns: ColumnDef<Module>[] = [
       const date = row.getValue("rfloDate");
       if (!date) return <span className="text-muted-foreground">N/A</span>;
       try {
-        return <span>{format(new Date(date as string), "dd-MMM-yy")}</span>;
+        const d = new Date(date as string);
+        const utcDate = new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + 1);
+        return <span>{format(utcDate, "dd-MMM-yy")}</span>;
       } catch (e) {
         return <span className="text-destructive">Invalid Date</span>
       }
@@ -122,24 +120,12 @@ export const columns: ColumnDef<Module>[] = [
     accessorKey: 'signedReport',
     header: 'Signed Report',
     cell: function Cell({ row }) {
-      const firestore = useFirestore();
       const module = row.original;
-      
-      const handleCheckedChange = (value: boolean) => {
-        if (!firestore) {
-          toast({ title: 'Error updating report status.', variant: 'destructive', description: 'Database not available.' });
-          return;
-        };
-        const moduleRef = doc(firestore, 'modules', module.id);
-        updateDocumentNonBlocking(moduleRef, { signedReport: !!value });
-        toast({ title: 'Report status updated.' });
-      }
-
       return (
         <Checkbox
-          checked={module.signedReport}
-          onCheckedChange={handleCheckedChange}
+          checked={!!module.signedReport}
           aria-label="Signed report"
+          disabled 
         />
       );
     },
