@@ -14,18 +14,10 @@ export const columns: ColumnDef<Module>[] = [
   {
     accessorKey: "yard",
     header: "Yard",
-    filterFn: (row, id, value) => {
-      return value.includes(row.getValue(id));
-    },
-    size: 100,
   },
   {
     accessorKey: "location",
     header: "Location",
-    filterFn: (row, id, value) => {
-      return value.includes(row.getValue(id));
-    },
-    size: 100,
   },
   {
     accessorKey: "moduleNo",
@@ -47,112 +39,41 @@ export const columns: ColumnDef<Module>[] = [
         </div>
       );
     },
-    size: 200,
   },
   {
     accessorKey: "shipmentDate",
     header: "Shipment Date",
-    cell: ({ row }) => {
+     cell: ({ row }) => {
       const dateString = row.getValue("shipmentDate") as string;
       if (!dateString) return <span className="text-muted-foreground">N/A</span>;
       try {
-        // The date is YYYY-MM-DD. We need to parse it as UTC to avoid timezone shifts.
         const [year, month, day] = dateString.split('-').map(Number);
+        if (isNaN(year) || isNaN(month) || isNaN(day)) return <span className="text-destructive">{dateString}</span>;
         const utcDate = new Date(Date.UTC(year, month - 1, day));
         return <span>{format(utcDate, "dd-MMM-yy")}</span>;
       } catch (e) {
-        return <span className="text-destructive">Invalid Date</span>
+        return <span className="text-muted-foreground">{dateString}</span>
       }
     },
-    size: 120,
   },
   {
     accessorKey: "shipmentNo",
     header: "Shipment No#",
-    filterFn: (row, id, value) => {
-      return value.includes(row.getValue(id));
-    },
-    size: 150,
   },
   {
     accessorKey: "rfloDateStatus",
     header: "RFLO Status",
     cell: ({ row }) => {
-      const status = row.getValue("rfloDateStatus") as Module["rfloDateStatus"];
+      const status = row.getValue("rfloDateStatus") as string;
+      if (!status) return null;
       const variant: "default" | "secondary" | "outline" =
-        status === "Date Confirmed" ? "default" : status === "1st Quarter-2026" ? "secondary" : "outline";
+        status.toLowerCase() === "date confirmed" ? "default" : status.toLowerCase().includes("quarter") ? "secondary" : "outline";
       return <Badge variant={variant}>{status}</Badge>;
     },
-    filterFn: (row, id, value) => {
-      return value.includes(row.getValue(id));
-    },
-    size: 150,
-  },
-  {
-    accessorKey: "rfloDate",
-    header: "RFLO Date",
-    cell: ({ row }) => {
-      const dateString = row.getValue("rfloDate") as string;
-      if (!dateString) return <span className="text-muted-foreground">N/A</span>;
-      try {
-        // The date is YYYY-MM-DD. We need to parse it as UTC to avoid timezone shifts.
-        const [year, month, day] = dateString.split('-').map(Number);
-        const utcDate = new Date(Date.UTC(year, month - 1, day));
-        return <span>{format(utcDate, "dd-MMM-yy")}</span>;
-      } catch (e) {
-        return <span className="text-destructive">Invalid Date</span>
-      }
-    },
-    size: 120,
-  },
-  {
-    accessorKey: "yardReport",
-    header: "Yard Report",
-    cell: ({ row }) => {
-      const report: string = row.getValue("yardReport");
-      return <div className="truncate max-w-[250px]">{report || "-"}</div>
-    },
-    size: 250,
-  },
-  {
-    accessorKey: "islandReport",
-    header: "Island Report",
-    cell: ({ row }) => {
-      const report: string = row.getValue("islandReport");
-      return <div className="truncate max-w-[250px]">{report || "-"}</div>
-    },
-    size: 250,
-  },
-  {
-    id: "combinedReport",
-    header: "Combined Report",
-    cell: ({ row }) => {
-      const yardReport = row.original.yardReport;
-      const islandReport = row.original.islandReport;
-      const combined = [yardReport, islandReport].filter(Boolean).join(" | ");
-      return <div className="truncate max-w-[300px]">{combined || "-"}</div>;
-    },
-    size: 300,
-  },
-  {
-    accessorKey: 'signedReport',
-    header: 'Signed Report',
-    cell: function Cell({ row }) {
-      const module = row.original;
-      return (
-        <Checkbox
-          checked={!!module.signedReport}
-          aria-label="Signed report"
-          disabled 
-        />
-      );
-    },
-    size: 100,
   },
   {
     id: "actions",
     cell: ({ row }) => <DataTableRowActions row={row} />,
-    size: 50,
     enableHiding: false,
   },
 ];

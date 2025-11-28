@@ -1,7 +1,7 @@
 "use client";
 
 import { Table } from "@tanstack/react-table";
-import { FileDown, PlusCircle, FileText, FileSpreadsheet, Database } from "lucide-react";
+import { FileDown, PlusCircle, FileText, FileSpreadsheet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DataTableViewOptions } from "./data-table-view-options";
@@ -16,8 +16,6 @@ import type { Module } from "@/lib/types";
 import { useFirestore } from "@/firebase";
 import { createModule } from "@/lib/firestore-mutations";
 import { useToast } from "@/hooks/use-toast";
-import { initialModules } from "@/lib/data";
-import { addDoc, collection, writeBatch } from "firebase/firestore";
 
 
 interface DataTableToolbarProps<TData> {
@@ -36,24 +34,19 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
     const doc = new jsPDF();
     const tableData = table.getFilteredRowModel().rows.map(row => {
         const module = row.original as Module;
-        const rfloDate = new Date(module.rfloDate);
-        const shipmentDate = new Date(module.shipmentDate);
+        const shipmentDate = module.shipmentDate ? new Date(module.shipmentDate) : null;
         return [
             module.yard,
             module.location,
             module.moduleNo,
-            module.shipmentDate && isValid(shipmentDate) ? format(shipmentDate, "dd-MMM-yy") : "N/A",
+            shipmentDate && isValid(shipmentDate) ? format(shipmentDate, "dd-MMM-yy") : "N/A",
             module.shipmentNo,
             module.rfloDateStatus,
-            module.rfloDate && isValid(rfloDate) ? format(rfloDate, "dd-MMM-yy") : "N/A",
-            module.yardReport,
-            module.islandReport,
-            module.signedReport ? "Yes" : "No"
         ];
     });
 
     autoTable(doc, {
-      head: [['Yard', 'Location', 'Module No.', 'Shipment Date', 'Shipment No#', 'RFLO Status', 'RFLO Date', 'Yard Report', 'Island Report', 'Signed']],
+      head: [['Yard', 'Location', 'Module No.', 'Shipment Date', 'Shipment No#', 'RFLO Status']],
       body: tableData,
     });
     
@@ -63,19 +56,14 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
   const handleExportExcel = () => {
     const tableData = table.getFilteredRowModel().rows.map(row => {
         const module = row.original as Module;
-        const rfloDate = new Date(module.rfloDate);
-        const shipmentDate = new Date(module.shipmentDate);
+        const shipmentDate = module.shipmentDate ? new Date(module.shipmentDate) : null;
         return {
             'Yard': module.yard,
             'Location': module.location,
             'Module No.': module.moduleNo,
-            'Shipment Date': module.shipmentDate && isValid(shipmentDate) ? format(shipmentDate, "dd-MMM-yy") : "N/A",
+            'Shipment Date': shipmentDate && isValid(shipmentDate) ? format(shipmentDate, "dd-MMM-yy") : "N/A",
             'Shipment No#': module.shipmentNo,
             'RFLO Status': module.rfloDateStatus,
-            'RFLO Date': module.rfloDate && isValid(rfloDate) ? format(rfloDate, "dd-MMM-yy") : "N/A",
-            'Yard Report': module.yardReport,
-            'Island Report': module.islandReport,
-            'Signed Report': module.signedReport ? "Yes" : "No"
         };
     });
 
@@ -108,49 +96,35 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
                     return;
                 }
 
-                const expectedHeaders = ['Yard', 'LOCATION', 'Module No.', 'Shipment No#', 'RFLO Date Status'];
-                const fileHeaders = Object.keys(json[0]);
-                const missingHeaders = expectedHeaders.filter(header => !fileHeaders.includes(header));
-
-                if (missingHeaders.length > 0) {
-                    toast({
-                        variant: "destructive",
-                        title: "Invalid File Format",
-                        description: `The Excel file is missing required columns: ${missingHeaders.join(', ')}`,
-                    });
-                    return;
-                }
-
                 let importedCount = 0;
                 for (const row of json) {
                     const parseDate = (excelDate: any) => {
                       if (!excelDate) return '';
+                      // Check if it's an Excel date serial number
                       if (typeof excelDate === 'number') {
-                        const date = new Date(Date.UTC(1900, 0, excelDate - 1));
-                        return date.toISOString().split('T')[0];
-                      } else if (typeof excelDate === 'string') {
+                        // Formula to convert Excel serial date to JS Date object
+                        const date = new Date(Math.round((excelDate - 25569) * 86400 * 1000));
+                        return date.toISOString().split('T')[0]; // Format to YYYY-MM-DD
+                      }
+                      // Check if it's a date string
+                      if (typeof excelDate === 'string') {
                         const date = new Date(excelDate);
                         if (isValid(date)) {
                           return date.toISOString().split('T')[0];
                         }
                       }
-                      return '';
+                      return ''; // Return empty for invalid formats
                     }
                     
-                    const rfloDate = parseDate(row['RFLO Date']);
-                    const shipmentDate = parseDate(row['SHIPMENT DATE']);
+                    const shipmentDate = parseDate(row['Shipment Date'] || row['SHIPMENT DATE']);
 
                     const newModule: Omit<Module, 'id'> = {
                         yard: row['Yard'] || '',
-                        location: row['LOCATION'] || '',
+                        location: row['Location'] || row['LOCATION'] || '',
                         moduleNo: row['Module No.'] || '',
                         shipmentDate: shipmentDate,
                         shipmentNo: row['Shipment No#'] || '',
-                        rfloDate: rfloDate,
-                        rfloDateStatus: row['RFLO Date Status'] || 'Pending',
-                        yardReport: row['Yard Report'] || '',
-                        islandReport: row['Island Report'] || '',
-                        signedReport: row['Signed Report'] === 'Yes' || row['Signed Report'] === true,
+                        rfloDateStatus: row['RFLO Date Status'] || row['RFLO Date StatuS'] || 'Pending',
                     };
 
                     await createModule(firestore, newModule);
@@ -180,42 +154,6 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
     reader.readAsArrayBuffer(file);
   }
 
-  const handleSeedDatabase = () => {
-    if (!firestore) {
-      toast({
-        variant: "destructive",
-        title: "Database Error",
-        description: "Firestore is not initialized.",
-      });
-      return;
-    }
-
-    startTransition(async () => {
-      try {
-        const modulesCollection = collection(firestore, 'modules');
-        const batch = writeBatch(firestore);
-
-        for (const moduleData of initialModules) {
-          const docRef = doc(modulesCollection); // Create a new document reference with an auto-generated ID
-          batch.set(docRef, moduleData);
-        }
-
-        await batch.commit();
-        toast({
-          title: "Database Seeded",
-          description: `Successfully added ${initialModules.length} modules.`,
-        });
-      } catch (error) {
-        console.error("Database seeding failed:", error);
-        toast({
-          variant: "destructive",
-          title: "Seeding Failed",
-          description: error instanceof Error ? error.message : "An unexpected error occurred during seeding.",
-        });
-      }
-    });
-  };
-
   return (
     <div className="flex items-center justify-between py-4">
       <div className="flex flex-1 items-center space-x-2">
@@ -229,10 +167,6 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
         />
       </div>
       <div className="flex items-center space-x-2">
-        <Button variant="outline" size="sm" onClick={handleSeedDatabase} disabled={isPending}>
-          <Database className="mr-2 h-4 w-4" />
-          Seed Database
-        </Button>
         <Button variant="outline" size="sm" onClick={handleExportPDF}>
           <FileText className="mr-2 h-4 w-4" />
           Export PDF
