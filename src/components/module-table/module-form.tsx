@@ -27,6 +27,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import { addModule, updateModule } from "@/lib/actions";
 import type { Module } from "@/lib/types";
+import { Checkbox } from "../ui/checkbox";
 
 const formSchema = z.object({
   yard: z.string().min(1, "Yard is required."),
@@ -37,7 +38,7 @@ const formSchema = z.object({
   rfloDateStatus: z.enum(["Date Confirmed", "1st Quarter-2026", "Pending"]),
   yardReport: z.string().optional(),
   islandReport: z.string().optional(),
-  byWhom: z.string().optional(),
+  signedReport: z.boolean().optional(),
 });
 
 type ModuleFormValues = z.infer<typeof formSchema>;
@@ -61,7 +62,7 @@ export function ModuleForm({ module, setOpen }: ModuleFormProps) {
       rfloDateStatus: module?.rfloDateStatus || "Pending",
       yardReport: module?.yardReport || "",
       islandReport: module?.islandReport || "",
-      byWhom: module?.byWhom || "",
+      signedReport: module?.signedReport || false,
     },
   });
 
@@ -209,14 +210,20 @@ export function ModuleForm({ module, setOpen }: ModuleFormProps) {
         />
         <FormField
             control={form.control}
-            name="byWhom"
+            name="signedReport"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel>Updated By</FormLabel>
+              <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
                 <FormControl>
-                  <Input placeholder="User name" {...field} />
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
                 </FormControl>
-                <FormMessage />
+                <div className="space-y-1 leading-none">
+                  <FormLabel>
+                    Signed Report
+                  </FormLabel>
+                </div>
               </FormItem>
             )}
           />

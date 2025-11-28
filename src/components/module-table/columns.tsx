@@ -6,8 +6,11 @@ import { ArrowUpDown } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { DataTableRowActions } from "./data-table-row-actions";
 import type { Module } from "@/lib/types";
+import { updateModule } from "@/lib/actions";
+import { toast } from "@/hooks/use-toast";
 
 export const columns: ColumnDef<Module>[] = [
   {
@@ -54,7 +57,11 @@ export const columns: ColumnDef<Module>[] = [
     cell: ({ row }) => {
       const date = row.getValue("rfloDate");
       if (!date) return <span className="text-muted-foreground">N/A</span>;
-      return <span>{format(new Date(date as string), "dd-MMM-yy")}</span>;
+      try {
+        return <span>{format(new Date(date as string), "dd-MMM-yy")}</span>;
+      } catch (e) {
+        return <span className="text-destructive">Invalid Date</span>
+      }
     },
     size: 120,
   },
@@ -110,13 +117,26 @@ export const columns: ColumnDef<Module>[] = [
     size: 300,
   },
   {
-    accessorKey: "byWhom",
-    header: "By Whom",
-     cell: ({ row }) => {
-      const byWhom: string = row.getValue("byWhom");
-      return <div className="truncate max-w-[150px]">{byWhom || "-"}</div>
+    accessorKey: 'signedReport',
+    header: 'Signed Report',
+    cell: ({ row }) => {
+      const module = row.original;
+      return (
+        <Checkbox
+          checked={module.signedReport}
+          onCheckedChange={async (value) => {
+            const result = await updateModule({ id: module.id, signedReport: !!value });
+            if (result.success) {
+              toast({ title: 'Report status updated.' });
+            } else {
+              toast({ title: 'Error updating report status.', variant: 'destructive' });
+            }
+          }}
+          aria-label="Signed report"
+        />
+      );
     },
-    size: 150,
+    size: 100,
   },
   {
     id: "actions",

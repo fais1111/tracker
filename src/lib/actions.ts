@@ -1,35 +1,28 @@
-"use server";
-
-import { revalidatePath } from "next/cache";
-import { z } from "zod";
-import type { Module } from "./types";
-import { initialModules } from "./data"; // In a real app, this would be a database client.
+'use server';
+import { revalidatePath } from 'next/cache';
+import { z } from 'zod';
+import { initializeFirebase } from '@/firebase';
+import { collection, addDoc, doc, updateDoc } from 'firebase/firestore';
+import type { Module } from './types';
 
 const moduleSchema = z.object({
   id: z.string(),
-  yard: z.string().min(1, "Yard is required."),
-  location: z.string().min(1, "Location is required."),
-  moduleNo: z.string().min(1, "Module No. is required."),
+  yard: z.string().min(1, 'Yard is required.'),
+  location: z.string().min(1, 'Location is required.'),
+  moduleNo: z.string().min(1, 'Module No. is required.'),
   rfloDate: z.string().optional(),
   shipmentNo: z.string().optional(),
-  rfloDateStatus: z.enum(["Date Confirmed", "1st Quarter-2026", "Pending"]),
+  rfloDateStatus: z.enum(['Date Confirmed', '1st Quarter-2026', 'Pending']),
   yardReport: z.string().optional(),
   islandReport: z.string().optional(),
-  byWhom: z.string().optional(),
+  signedReport: z.boolean().optional(),
 });
 
-// This is a mock database. In a real application, you would use a real database.
-let modules: Omit<Module, 'isAnomaly' | 'anomalyExplanation'>[] = [...initialModules];
+const moduleUpdateSchema = moduleSchema.partial().required({ id: true });
 
-export async function getModules(): Promise<Module[]> {
-  // In a real app, you'd fetch from a database.
-  // We add a delay to simulate network latency.
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  return modules as Module[];
-}
 
-export async function updateModule(data: z.infer<typeof moduleSchema>) {
-  const validation = moduleSchema.safeParse(data);
+export async function updateModule(data: z.infer<typeof moduleUpdateSchema>) {
+  const validation = moduleUpdateSchema.safeParse(data);
   if (!validation.success) {
     return {
       success: false,
@@ -37,30 +30,21 @@ export async function updateModule(data: z.infer<typeof moduleSchema>) {
     };
   }
 
-  const { id, ...moduleData } = validation.data;
-  
-  const moduleIndex = modules.findIndex((m) => m.id === id);
-
-  if (moduleIndex === -1) {
-    return { success: false, error: { _form: ["Module not found."] } };
+  try {
+    const { firestore } = initializeFirebase();
+    const { id, ...moduleData } = validation.data;
+    const moduleRef = doc(firestore, 'modules', id);
+    await updateDoc(moduleRef, moduleData);
+    revalidatePath('/');
+    return { success: true, data: { id, ...moduleData } };
+  } catch (e: any) {
+    return { success: false, error: { _form: [e.message] } };
   }
-
-  const existingModule = modules[moduleIndex];
-
-  const updatedModule = {
-    ...existingModule,
-    ...moduleData,
-    rfloDate: moduleData.rfloDate || existingModule.rfloDate,
-  };
-
-  modules[moduleIndex] = updatedModule;
-  
-  revalidatePath("/");
-
-  return { success: true, data: updatedModule };
 }
 
-export async function addModule(data: Omit<z.infer<typeof moduleSchema>, "id">) {
+export async function addModule(
+  data: Omit<z.infer<typeof moduleSchema>, 'id'>
+) {
   const validation = moduleSchema.omit({ id: true }).safeParse(data);
   if (!validation.success) {
     return {
@@ -68,15 +52,17 @@ export async function addModule(data: Omit<z.infer<typeof moduleSchema>, "id">) 
       error: validation.error.flatten().fieldErrors,
     };
   }
-  
-  const newModuleData = validation.data;
-  const newModule: Omit<Module, 'isAnomaly' | 'anomalyExplanation'> = {
-    id: (modules.length + 1).toString(),
-    ...newModuleData,
-    rfloDate: newModuleData.rfloDate || '',
-  };
 
-  modules.unshift(newModule); // Add to the beginning of the array
-  revalidatePath("/");
-  return { success: true, data: newModule };
+  try {
+    const { firestore } = initializeFirebase();
+    const newModuleData = validation.data;
+    const docRef = await addDoc(collection(firestore, 'modules'), {
+        ...newModuleData,
+        signedReport: newModuleData.signedReport || false,
+    });
+    revalidatePath('/');
+    return { success: true, data: { id: docRef.id, ...newModuleData } };
+  } catch (e: any) {
+    return { success: false, error: { _form: [e.message] } };
+  }
 }

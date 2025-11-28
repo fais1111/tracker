@@ -8,5 +8,5 @@ export type Module = {
   rfloDateStatus: 'Date Confirmed' | '1st Quarter-2026' | 'Pending';
   yardReport: string;
   islandReport: string;
-  byWhom: string;
+  signedReport: boolean;
 };
