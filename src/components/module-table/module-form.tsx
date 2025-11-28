@@ -51,6 +51,11 @@ export function ModuleForm({ module, setOpen }: ModuleFormProps) {
     if (!rawData.rfloDate) {
       rawData.rfloDate = '';
     }
+    
+    // Shipment Date can be empty, ensure it's a string
+    if (!rawData.shipmentDate) {
+      rawData.shipmentDate = '';
+    }
 
     startTransition(async () => {
       try {
@@ -85,6 +90,10 @@ export function ModuleForm({ module, setOpen }: ModuleFormProps) {
         <div>
           <Label htmlFor="moduleNo">Module No.</Label>
           <Input id="moduleNo" name="moduleNo" defaultValue={module?.moduleNo} required />
+        </div>
+         <div>
+          <Label htmlFor="shipmentDate">Shipment Date</Label>
+          <Input id="shipmentDate" name="shipmentDate" type="date" defaultValue={module?.shipmentDate} />
         </div>
         <div>
           <Label htmlFor="rfloDate">RFLO Date</Label>

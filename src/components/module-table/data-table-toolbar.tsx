@@ -35,13 +35,15 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
     const tableData = table.getFilteredRowModel().rows.map(row => {
         const module = row.original as Module;
         const rfloDate = new Date(module.rfloDate);
+        const shipmentDate = new Date(module.shipmentDate);
         return [
-            module.moduleNo,
             module.yard,
             module.location,
-            module.rfloDate && isValid(rfloDate) ? format(rfloDate, "dd-MMM-yy") : "N/A",
+            module.moduleNo,
+            module.shipmentDate && isValid(shipmentDate) ? format(shipmentDate, "dd-MMM-yy") : "N/A",
             module.shipmentNo,
             module.rfloDateStatus,
+            module.rfloDate && isValid(rfloDate) ? format(rfloDate, "dd-MMM-yy") : "N/A",
             module.yardReport,
             module.islandReport,
             module.signedReport ? "Yes" : "No"
@@ -49,7 +51,7 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
     });
 
     autoTable(doc, {
-      head: [['Module No.', 'Yard', 'Location', 'RFLO Date', 'Shipment No#', 'RFLO Status', 'Yard Report', 'Island Report', 'Signed']],
+      head: [['Yard', 'Location', 'Module No.', 'Shipment Date', 'Shipment No#', 'RFLO Status', 'RFLO Date', 'Yard Report', 'Island Report', 'Signed']],
       body: tableData,
     });
     
@@ -60,13 +62,15 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
     const tableData = table.getFilteredRowModel().rows.map(row => {
         const module = row.original as Module;
         const rfloDate = new Date(module.rfloDate);
+        const shipmentDate = new Date(module.shipmentDate);
         return {
-            'Module No.': module.moduleNo,
             'Yard': module.yard,
             'Location': module.location,
-            'RFLO Date': module.rfloDate && isValid(rfloDate) ? format(rfloDate, "dd-MMM-yy") : "N/A",
+            'Module No.': module.moduleNo,
+            'Shipment Date': module.shipmentDate && isValid(shipmentDate) ? format(shipmentDate, "dd-MMM-yy") : "N/A",
             'Shipment No#': module.shipmentNo,
             'RFLO Status': module.rfloDateStatus,
+            'RFLO Date': module.rfloDate && isValid(rfloDate) ? format(rfloDate, "dd-MMM-yy") : "N/A",
             'Yard Report': module.yardReport,
             'Island Report': module.islandReport,
             'Signed Report': module.signedReport ? "Yes" : "No"
@@ -117,28 +121,30 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
 
                 let importedCount = 0;
                 for (const row of json) {
-                    const excelDate = row['RFLO Date'];
-                    let formattedDate = '';
-                    if(excelDate) {
-                        // Handle Excel serial date number
-                        if (typeof excelDate === 'number') {
-                             const date = new Date(Date.UTC(1900, 0, excelDate - 1));
-                             formattedDate = date.toISOString().split('T')[0];
-                        } else if (typeof excelDate === 'string') {
-                           // Handle string dates (e.g., 'YYYY-MM-DD')
-                           const date = new Date(excelDate);
-                           if(isValid(date)) {
-                                formattedDate = date.toISOString().split('T')[0];
-                           }
+                    const parseDate = (excelDate: any) => {
+                      if (!excelDate) return '';
+                      if (typeof excelDate === 'number') {
+                        const date = new Date(Date.UTC(1900, 0, excelDate - 1));
+                        return date.toISOString().split('T')[0];
+                      } else if (typeof excelDate === 'string') {
+                        const date = new Date(excelDate);
+                        if (isValid(date)) {
+                          return date.toISOString().split('T')[0];
                         }
+                      }
+                      return '';
                     }
+                    
+                    const rfloDate = parseDate(row['RFLO Date']);
+                    const shipmentDate = parseDate(row['SHIPMENT DATE']);
 
                     const newModule: Omit<Module, 'id'> = {
                         yard: row['Yard'] || '',
                         location: row['LOCATION'] || '',
                         moduleNo: row['Module No.'] || '',
+                        shipmentDate: shipmentDate,
                         shipmentNo: row['Shipment No#'] || '',
-                        rfloDate: formattedDate,
+                        rfloDate: rfloDate,
                         rfloDateStatus: row['RFLO Date Status'] || 'Pending',
                         yardReport: row['Yard Report'] || '',
                         islandReport: row['Island Report'] || '',

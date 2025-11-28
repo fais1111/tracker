@@ -12,6 +12,22 @@ import type { Module } from "@/lib/types";
 
 export const columns: ColumnDef<Module>[] = [
   {
+    accessorKey: "yard",
+    header: "Yard",
+    filterFn: (row, id, value) => {
+      return value.includes(row.getValue(id));
+    },
+    size: 100,
+  },
+  {
+    accessorKey: "location",
+    header: "Location",
+    filterFn: (row, id, value) => {
+      return value.includes(row.getValue(id));
+    },
+    size: 100,
+  },
+  {
     accessorKey: "moduleNo",
     header: ({ column }) => {
       return (
@@ -34,26 +50,10 @@ export const columns: ColumnDef<Module>[] = [
     size: 200,
   },
   {
-    accessorKey: "yard",
-    header: "Yard",
-    filterFn: (row, id, value) => {
-      return value.includes(row.getValue(id));
-    },
-    size: 100,
-  },
-  {
-    accessorKey: "location",
-    header: "Location",
-    filterFn: (row, id, value) => {
-      return value.includes(row.getValue(id));
-    },
-    size: 100,
-  },
-  {
-    accessorKey: "rfloDate",
-    header: "RFLO Date",
+    accessorKey: "shipmentDate",
+    header: "Shipment Date",
     cell: ({ row }) => {
-      const dateString = row.getValue("rfloDate") as string;
+      const dateString = row.getValue("shipmentDate") as string;
       if (!dateString) return <span className="text-muted-foreground">N/A</span>;
       try {
         // The date is YYYY-MM-DD. We need to parse it as UTC to avoid timezone shifts.
@@ -87,6 +87,23 @@ export const columns: ColumnDef<Module>[] = [
       return value.includes(row.getValue(id));
     },
     size: 150,
+  },
+  {
+    accessorKey: "rfloDate",
+    header: "RFLO Date",
+    cell: ({ row }) => {
+      const dateString = row.getValue("rfloDate") as string;
+      if (!dateString) return <span className="text-muted-foreground">N/A</span>;
+      try {
+        // The date is YYYY-MM-DD. We need to parse it as UTC to avoid timezone shifts.
+        const [year, month, day] = dateString.split('-').map(Number);
+        const utcDate = new Date(Date.UTC(year, month - 1, day));
+        return <span>{format(utcDate, "dd-MMM-yy")}</span>;
+      } catch (e) {
+        return <span className="text-destructive">Invalid Date</span>
+      }
+    },
+    size: 120,
   },
   {
     accessorKey: "yardReport",
