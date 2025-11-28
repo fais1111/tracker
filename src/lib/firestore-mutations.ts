@@ -6,7 +6,6 @@ import {
   updateDoc,
   doc,
   deleteDoc,
-  serverTimestamp,
   type Firestore,
 } from 'firebase/firestore';
 import type { Module } from '@/lib/types';

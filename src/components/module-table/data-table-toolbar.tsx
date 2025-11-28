@@ -5,7 +5,7 @@ import { FileDown, PlusCircle, FileText, FileSpreadsheet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { DataTableViewOptions } from './data-table-view-options';
-import { useState, useRef, useTransition } from 'react';
+import { useState } from 'react';
 import { ModuleForm } from './module-form';
 import {
   Dialog,
@@ -19,14 +19,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import type { Module } from '@/lib/types';
-import { useFirestore } from '@/firebase';
-import { createModule } from '@/lib/firestore-mutations';
-import { useToast } from '@/hooks/use-toast';
-import * as pdfjs from 'pdfjs-dist';
-
-// Set the worker source for pdfjs-dist
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
-
+import { ColumnImportForm } from './column-import-form';
 
 interface DataTableToolbarProps<TData> {
   table: Table<TData>;
@@ -34,10 +27,7 @@ interface DataTableToolbarProps<TData> {
 
 export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>) {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const firestore = useFirestore();
-  const { toast } = useToast();
-  const [isPending, startTransition] = useTransition();
+  const [isImportOpen, setIsImportOpen] = useState(false);
 
   const handleExportPDF = () => {
     const doc = new jsPDF();
@@ -80,101 +70,6 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
     XLSX.writeFile(wb, 'modules.xlsx');
   };
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file || !firestore) return;
-
-    if (file.type === 'application/pdf') {
-      handlePdfImport(file);
-    } else {
-      toast({
-        variant: 'destructive',
-        title: 'Invalid File Type',
-        description: 'Please upload a PDF file.',
-      });
-    }
-  };
-
-  const handlePdfImport = (file: File) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      startTransition(async () => {
-        try {
-          const typedarray = new Uint8Array(e.target?.result as ArrayBuffer);
-          const pdf = await pdfjs.getDocument(typedarray).promise;
-          let importedCount = 0;
-
-          for (let i = 1; i <= pdf.numPages; i++) {
-            const page = await pdf.getPage(i);
-            const textContent = await page.getTextContent();
-            
-            // This logic is highly dependent on the PDF structure and might need refinement.
-            // It tries to group text items into rows and then split rows into columns.
-            let y = 0;
-            let rowText = '';
-            const rows = textContent.items.reduce((acc: string[], item: any) => {
-              if (Math.abs(item.transform[5] - y) > 5 && rowText) {
-                acc.push(rowText);
-                rowText = '';
-              }
-              rowText += item.str + '  '; // Add space between text blocks
-              y = item.transform[5];
-              return acc;
-            }, []);
-            if (rowText) rows.push(rowText);
-
-
-            for (const rowText of rows) {
-               // Simple split by multiple spaces, assuming columns are well-separated
-               const columns = rowText.split(/\s{2,}/).map(s => s.trim());
-               if (columns.length >= 5) { // Check for minimum number of columns
-                const newModule: Omit<Module, 'id'> = {
-                    yard: columns[0] || '',
-                    location: columns[1] || '',
-                    moduleNo: columns[2] || '',
-                    shipmentDate: columns[3] || '',
-                    shipmentNo: columns[4] || '',
-                    rfloDateStatus: columns[5] || 'Pending',
-                };
-                // Basic validation to skip header rows and empty rows
-                if (newModule.moduleNo && newModule.moduleNo.toLowerCase() !== 'module no.' && newModule.yard.toLowerCase() !== 'yard') {
-                  await createModule(firestore, newModule);
-                  importedCount++;
-                }
-              }
-            }
-          }
-
-          if (importedCount > 0) {
-            toast({
-              title: 'Import Successful',
-              description: `Successfully imported ${importedCount} modules from the PDF.`,
-            });
-          } else {
-            toast({
-              variant: 'destructive',
-              title: 'Import Failed',
-              description: 'Could not find any valid module data in the PDF. Please check the file format and structure.',
-            });
-          }
-
-        } catch (error) {
-          console.error('PDF Import failed:', error);
-          toast({
-            variant: 'destructive',
-            title: 'Import Failed',
-            description: error instanceof Error ? error.message : 'An unexpected error occurred during PDF import.',
-          });
-        } finally {
-          if (fileInputRef.current) {
-            fileInputRef.current.value = '';
-          }
-        }
-      });
-    };
-    reader.readAsArrayBuffer(file);
-  };
-
   return (
     <div className="flex items-center justify-between py-4">
       <div className="flex flex-1 items-center space-x-2">
@@ -196,17 +91,23 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
           <FileSpreadsheet className="mr-2 h-4 w-4" />
           Export Excel
         </Button>
-        <input
-          type="file"
-          ref={fileInputRef}
-          onChange={handleFileChange}
-          className="hidden"
-          accept=".pdf"
-        />
-        <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={isPending}>
-          <FileDown className="mr-2 h-4 w-4" />
-          Import PDF
-        </Button>
+        <Dialog open={isImportOpen} onOpenChange={setIsImportOpen}>
+          <DialogTrigger asChild>
+            <Button variant="outline" size="sm">
+              <FileDown className="mr-2 h-4 w-4" />
+              Import Data
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>Import Column Data</DialogTitle>
+              <DialogDescription>
+                Paste data for a single column. The system will update existing modules or create new ones.
+              </DialogDescription>
+            </DialogHeader>
+            <ColumnImportForm setOpen={setIsImportOpen} />
+          </DialogContent>
+        </Dialog>
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogTrigger asChild>
             <Button size="sm">
