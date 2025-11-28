@@ -9,7 +9,6 @@ import {
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
-  getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
@@ -24,7 +23,7 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTableToolbar } from "./data-table-toolbar";
-import { DataTablePagination } from "./data-table-pagination";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -49,7 +48,6 @@ export function DataTable<TData, TValue>({
     onRowSelectionChange: setRowSelection,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     state: {
       sorting,
@@ -67,9 +65,9 @@ export function DataTable<TData, TValue>({
       </CardHeader>
       <CardContent>
         <DataTableToolbar table={table} />
-        <div className="rounded-md border">
+        <ScrollArea className="rounded-md border h-[60vh]">
           <Table>
-            <TableHeader>
+            <TableHeader className="sticky top-0 bg-card">
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
                   {headerGroup.headers.map((header) => {
@@ -110,8 +108,7 @@ export function DataTable<TData, TValue>({
               )}
             </TableBody>
           </Table>
-        </div>
-        <DataTablePagination table={table} />
+        </ScrollArea>
       </CardContent>
     </Card>
   );

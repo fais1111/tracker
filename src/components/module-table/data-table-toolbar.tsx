@@ -40,11 +40,15 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
         module.shipmentDate,
         module.shipmentNo,
         module.rfloDateStatus,
+        module.yardReport,
+        module.islandReport,
+        module.combinedReport,
+        module.signed,
       ];
     });
 
     autoTable(doc, {
-      head: [['Yard', 'Location', 'Module No.', 'Shipment Date', 'Shipment No#', 'RFLO Status']],
+      head: [['Yard', 'Location', 'Module No.', 'Shipment Date', 'Shipment No#', 'RFLO Status', 'Yard Report', 'Island Report', 'Combined Report', 'Signed']],
       body: tableData,
     });
 
@@ -55,12 +59,16 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
     const tableData = table.getFilteredRowModel().rows.map(row => {
       const module = row.original as Module;
       return {
-        Yard: module.yard,
-        Location: module.location,
+        'Yard': module.yard,
+        'Location': module.location,
         'Module No.': module.moduleNo,
         'Shipment Date': module.shipmentDate,
         'Shipment No#': module.shipmentNo,
         'RFLO Status': module.rfloDateStatus,
+        'Yard Report': module.yardReport,
+        'Island Report': module.islandReport,
+        'Combined Report': module.combinedReport,
+        'Signed': module.signed,
       };
     });
 
