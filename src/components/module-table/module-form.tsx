@@ -47,9 +47,14 @@ export function ModuleForm({ module, setOpen }: ModuleFormProps) {
 
     startTransition(() => {
       try {
-        const moduleNo = rawData.moduleNo;
+        const moduleNo = isEditing ? module.moduleNo : rawData.moduleNo;
         if (!moduleNo) {
             throw new Error("Module No. is required.");
+        }
+
+        // If editing, add the disabled moduleNo back to the data payload
+        if (isEditing) {
+            rawData.moduleNo = moduleNo;
         }
 
         if (isEditing && module?.id) {
