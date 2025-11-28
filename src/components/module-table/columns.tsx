@@ -3,14 +3,16 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
 import { ArrowUpDown } from "lucide-react";
+import { doc } from "firebase/firestore";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DataTableRowActions } from "./data-table-row-actions";
 import type { Module } from "@/lib/types";
-import { updateModule } from "@/lib/actions";
 import { toast } from "@/hooks/use-toast";
+import { updateDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import { useFirestore } from "@/firebase";
 
 export const columns: ColumnDef<Module>[] = [
   {
@@ -119,19 +121,24 @@ export const columns: ColumnDef<Module>[] = [
   {
     accessorKey: 'signedReport',
     header: 'Signed Report',
-    cell: ({ row }) => {
+    cell: function Cell({ row }) {
+      const firestore = useFirestore();
       const module = row.original;
+      
+      const handleCheckedChange = (value: boolean) => {
+        if (!firestore) {
+          toast({ title: 'Error updating report status.', variant: 'destructive', description: 'Database not available.' });
+          return;
+        };
+        const moduleRef = doc(firestore, 'modules', module.id);
+        updateDocumentNonBlocking(moduleRef, { signedReport: !!value });
+        toast({ title: 'Report status updated.' });
+      }
+
       return (
         <Checkbox
           checked={module.signedReport}
-          onCheckedChange={async (value) => {
-            const result = await updateModule({ id: module.id, signedReport: !!value });
-            if (result.success) {
-              toast({ title: 'Report status updated.' });
-            } else {
-              toast({ title: 'Error updating report status.', variant: 'destructive' });
-            }
-          }}
+          onCheckedChange={handleCheckedChange}
           aria-label="Signed report"
         />
       );
