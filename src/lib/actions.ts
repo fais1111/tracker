@@ -2,8 +2,13 @@
 
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
-import { initializeFirebase } from '@/firebase';
-import { collection, addDoc, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { getFirestore } from 'firebase-admin/firestore';
+import { initializeServerApp } from '@/firebase/server';
+import { FieldValue } from 'firebase-admin/firestore';
+
+// Initialize the server-side Firebase app
+initializeServerApp();
+const db = getFirestore();
 
 // Schema for creating a module (ID is not present)
 const createModuleSchema = z.object({
@@ -47,11 +52,10 @@ export async function createModule(
   }
 
   try {
-    const { firestore } = initializeFirebase();
-    const modulesCollection = collection(firestore, 'modules');
-    await addDoc(modulesCollection, {
+    const modulesCollection = db.collection('modules');
+    await modulesCollection.add({
       ...validatedFields.data,
-      createdAt: serverTimestamp(),
+      createdAt: FieldValue.serverTimestamp(),
     });
 
     revalidatePath('/');
@@ -71,7 +75,7 @@ export async function updateModule(
   formData: FormData
 ): Promise<ActionState> {
   const rawData = Object.fromEntries(formData.entries());
-  rawData.signedReport = rawData.signedReport === 'on';
+   rawData.signedReport = rawData.signedReport === 'on';
 
   const validatedFields = updateModuleSchema.safeParse(rawData);
 
@@ -83,13 +87,12 @@ export async function updateModule(
   }
 
   try {
-    const { firestore } = initializeFirebase();
     const { id, ...dataToUpdate } = validatedFields.data;
     
-    const moduleRef = doc(firestore, 'modules', id);
-    await updateDoc(moduleRef, {
+    const moduleRef = db.collection('modules').doc(id);
+    await moduleRef.update({
       ...dataToUpdate,
-      lastUpdatedAt: serverTimestamp(),
+      lastUpdatedAt: FieldValue.serverTimestamp(),
     });
 
     revalidatePath('/');
