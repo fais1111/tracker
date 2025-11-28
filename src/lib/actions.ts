@@ -3,7 +3,6 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { initializeFirebase } from '@/firebase';
 import { collection, addDoc, doc, updateDoc } from 'firebase/firestore';
-import type { Module } from './types';
 
 const moduleSchema = z.object({
   id: z.string(),
@@ -58,7 +57,8 @@ export async function addModule(
     const newModuleData = validation.data;
     const docRef = await addDoc(collection(firestore, 'modules'), {
         ...newModuleData,
-        signedReport: newModuleData.signedReport || false,
+        // Ensure signedReport is not undefined
+        signedReport: newModuleData.signedReport ?? false,
     });
     revalidatePath('/');
     return { success: true, data: { id: docRef.id, ...newModuleData } };
