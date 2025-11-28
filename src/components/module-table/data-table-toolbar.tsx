@@ -1,19 +1,10 @@
 "use client";
 
 import { Table } from "@tanstack/react-table";
-import { FileDown, FileUp, PlusCircle, SlidersHorizontal } from "lucide-react";
+import { FileDown, PlusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
-import { initialModules } from "@/lib/data";
 import { DataTableViewOptions } from "./data-table-view-options";
 import { useState } from "react";
 import { ModuleForm } from "./module-form";
@@ -25,8 +16,6 @@ interface DataTableToolbarProps<TData> {
 
 export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>) {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const locations = Array.from(new Set(initialModules.map((m) => m.location)));
-  const statuses = Array.from(new Set(initialModules.map((m) => m.rfloDateStatus)));
 
   return (
     <div className="flex items-center justify-between py-4">
