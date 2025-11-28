@@ -5,6 +5,7 @@ import {
   addDoc,
   updateDoc,
   doc,
+  deleteDoc,
   serverTimestamp,
   type Firestore,
 } from 'firebase/firestore';
@@ -55,4 +56,20 @@ export const updateModule = (
     // Re-throw or handle as needed
     throw error;
   });
+};
+
+
+// Helper function to delete a module
+export const deleteModule = (firestore: Firestore, moduleId: string) => {
+    const moduleRef = doc(firestore, 'modules', moduleId);
+
+    deleteDoc(moduleRef).catch(error => {
+        console.error("Error deleting module: ", error);
+        const permissionError = new FirestorePermissionError({
+            path: moduleRef.path,
+            operation: 'delete',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+        throw error;
+    });
 };
