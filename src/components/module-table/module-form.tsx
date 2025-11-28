@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useFormState, useFormStatus } from 'react-dom';
+import { useEffect, useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
 import { Loader2 } from 'lucide-react';
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from '@/hooks/use-toast';
 import { saveModule } from '@/lib/actions';
 import type { Module } from '@/lib/types';
 import { Button } from '@/components/ui/button';
@@ -36,7 +36,7 @@ function SubmitButton({ isEditing }: { isEditing: boolean }) {
 
 export function ModuleForm({ module, setOpen }: ModuleFormProps) {
   const initialState = { success: false, errors: [] };
-  const [state, dispatch] = useFormState(saveModule, initialState);
+  const [state, dispatch] = useActionState(saveModule, initialState);
   const { toast } = useToast();
 
   useEffect(() => {
