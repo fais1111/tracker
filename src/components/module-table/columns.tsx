@@ -25,11 +25,12 @@ export const columns: ColumnDef<Module>[] = [
     },
     cell: ({ row }) => {
       return (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 font-medium">
           <span>{row.getValue("moduleNo")}</span>
         </div>
       );
     },
+    size: 200,
   },
   {
     accessorKey: "yard",
@@ -37,6 +38,7 @@ export const columns: ColumnDef<Module>[] = [
     filterFn: (row, id, value) => {
       return value.includes(row.getValue(id));
     },
+    size: 100,
   },
   {
     accessorKey: "location",
@@ -44,6 +46,7 @@ export const columns: ColumnDef<Module>[] = [
     filterFn: (row, id, value) => {
       return value.includes(row.getValue(id));
     },
+    size: 100,
   },
   {
     accessorKey: "rfloDate",
@@ -53,6 +56,7 @@ export const columns: ColumnDef<Module>[] = [
       if (!date) return <span className="text-muted-foreground">N/A</span>;
       return <span>{format(new Date(date as string), "dd-MMM-yy")}</span>;
     },
+    size: 120,
   },
   {
     accessorKey: "shipmentNo",
@@ -60,6 +64,7 @@ export const columns: ColumnDef<Module>[] = [
     filterFn: (row, id, value) => {
       return value.includes(row.getValue(id));
     },
+    size: 150,
   },
   {
     accessorKey: "rfloDateStatus",
@@ -73,33 +78,39 @@ export const columns: ColumnDef<Module>[] = [
     filterFn: (row, id, value) => {
       return value.includes(row.getValue(id));
     },
+    size: 150,
   },
   {
     accessorKey: "yardReport",
     header: "Yard Report",
     cell: ({ row }) => {
       const report: string = row.getValue("yardReport");
-      return <div className="truncate max-w-[150px]">{report || "-"}</div>
-    }
+      return <div className="truncate max-w-[250px]">{report || "-"}</div>
+    },
+    size: 250,
   },
   {
     accessorKey: "islandReport",
     header: "Island Report",
     cell: ({ row }) => {
       const report: string = row.getValue("islandReport");
-      return <div className="truncate max-w-[150px]">{report || "-"}</div>
-    }
+      return <div className="truncate max-w-[250px]">{report || "-"}</div>
+    },
+    size: 250,
   },
   {
     accessorKey: "byWhom",
     header: "By Whom",
      cell: ({ row }) => {
       const byWhom: string = row.getValue("byWhom");
-      return <div className="truncate max-w-[100px]">{byWhom || "-"}</div>
-    }
+      return <div className="truncate max-w-[150px]">{byWhom || "-"}</div>
+    },
+    size: 150,
   },
   {
     id: "actions",
     cell: ({ row }) => <DataTableRowActions row={row} />,
+    size: 50,
+    enableHiding: false,
   },
 ];
