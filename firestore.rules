@@ -1,3 +1,4 @@
+
 /**
  * @file firestore.rules
  * @description Firestore Security Rules for the ModuleTrack application.
@@ -5,7 +6,7 @@
  * ## Core Philosophy
  * This ruleset implements a Role-Based Access Control (RBAC) model. A user's
  * role, specifically whether they are an 'admin', dictates their permissions.
- * Administrative privileges are determined by the existence of a corresponding
+ * Administrative privileges are determined by the corresponding
  * document in the `/roles_admin` collection. This provides a clear, database-driven
  * way to manage high-level permissions. Regular users have read-only access to
  * shared data and can only manage their own user profile.
@@ -22,10 +23,8 @@
  *   of truth for admin status. To prevent client-side privilege escalation, this
  *   collection is read-only for all users. Admin roles must be managed via a
  *   trusted server environment (e.g., using the Firebase Admin SDK).
- * - Module Access: Only administrators are permitted to create, update, or delete
- *   module documents. To prevent data scraping and leakage, only administrators
- *   can list the entire set of modules. Any authenticated user can read (`get`)
- *   an individual module if they know its ID.
+ * - Module Access: The modules collection is publicly readable and writable for this
+ *   version of the application.
  * - User Data Privacy: Users can create and update their own profile in the `/users`
  *   collection. Listing all users is explicitly forbidden to protect user privacy.
  *
@@ -76,18 +75,10 @@ service cloud.firestore {
     /**
      * @description Rules for the 'modules' collection.
      * @path /modules/{moduleId}
-     * @allow (get) Any authenticated user can read a specific module.
-     * @allow (create, update, delete) An admin user creates, updates, or deletes a module.
-     * @deny (list) A non-admin user tries to list all modules.
-     * @deny (create) A non-admin user tries to create a new module.
-     * @principle Implements role-based write access and prevents enumeration by non-admins.
+     * @allow (read, write) Any client can read and write to the modules collection.
      */
     match /modules/{moduleId} {
-      allow get: if isSignedIn();
-      allow list: if isAdmin();
-      allow create: if isAdmin() && request.resource.data.lastUpdatedBy == request.auth.uid;
-      allow update: if isAdmin() && isExistingDoc() && request.resource.data.lastUpdatedBy == request.auth.uid;
-      allow delete: if isAdmin() && isExistingDoc();
+      allow read, write: if true;
     }
 
     /**
