@@ -18,13 +18,15 @@ import {
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
-import { format, isValid, parse } from 'date-fns';
 import type { Module } from '@/lib/types';
 import { useFirestore } from '@/firebase';
 import { createModule } from '@/lib/firestore-mutations';
 import { useToast } from '@/hooks/use-toast';
 import * as pdfjs from 'pdfjs-dist';
-import 'pdfjs-dist/build/pdf.worker.entry';
+
+// Set the worker source for pdfjs-dist
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
+
 
 interface DataTableToolbarProps<TData> {
   table: Table<TData>;
@@ -41,12 +43,11 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
     const doc = new jsPDF();
     const tableData = table.getFilteredRowModel().rows.map(row => {
       const module = row.original as Module;
-      const shipmentDate = module.shipmentDate;
       return [
         module.yard,
         module.location,
         module.moduleNo,
-        shipmentDate,
+        module.shipmentDate,
         module.shipmentNo,
         module.rfloDateStatus,
       ];
@@ -106,10 +107,22 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
           for (let i = 1; i <= pdf.numPages; i++) {
             const page = await pdf.getPage(i);
             const textContent = await page.getTextContent();
-            const text = textContent.items.map((s: any) => s.str).join(' ');
             
-            // This is a simplified regex and may need adjustment for your specific PDF layout
-            const rows = text.match(/.+/g) || [];
+            // This logic is highly dependent on the PDF structure and might need refinement.
+            // It tries to group text items into rows and then split rows into columns.
+            let y = 0;
+            let rowText = '';
+            const rows = textContent.items.reduce((acc: string[], item: any) => {
+              if (Math.abs(item.transform[5] - y) > 5 && rowText) {
+                acc.push(rowText);
+                rowText = '';
+              }
+              rowText += item.str + '  '; // Add space between text blocks
+              y = item.transform[5];
+              return acc;
+            }, []);
+            if (rowText) rows.push(rowText);
+
 
             for (const rowText of rows) {
                // Simple split by multiple spaces, assuming columns are well-separated
@@ -123,8 +136,8 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
                     shipmentNo: columns[4] || '',
                     rfloDateStatus: columns[5] || 'Pending',
                 };
-                // Basic validation to skip header rows
-                if (newModule.moduleNo && newModule.moduleNo.toLowerCase() !== 'module no.') {
+                // Basic validation to skip header rows and empty rows
+                if (newModule.moduleNo && newModule.moduleNo.toLowerCase() !== 'module no.' && newModule.yard.toLowerCase() !== 'yard') {
                   await createModule(firestore, newModule);
                   importedCount++;
                 }
@@ -141,7 +154,7 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
             toast({
               variant: 'destructive',
               title: 'Import Failed',
-              description: 'Could not find any valid module data in the PDF. Please check the file format.',
+              description: 'Could not find any valid module data in the PDF. Please check the file format and structure.',
             });
           }
 
