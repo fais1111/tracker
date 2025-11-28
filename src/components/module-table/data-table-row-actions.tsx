@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -58,6 +59,9 @@ export function DataTableRowActions<TData>({
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>Edit Module: {module.moduleNo}</DialogTitle>
+          <DialogDescription>
+            Make changes to the module details below. Click save when you're done.
+          </DialogDescription>
         </DialogHeader>
         <ModuleForm
           module={module}

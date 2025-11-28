@@ -17,7 +17,7 @@ import { initialModules } from "@/lib/data";
 import { DataTableViewOptions } from "./data-table-view-options";
 import { useState } from "react";
 import { ModuleForm } from "./module-form";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 interface DataTableToolbarProps<TData> {
   table: Table<TData>;
@@ -56,6 +56,9 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
           <DialogContent className="sm:max-w-[600px]">
             <DialogHeader>
               <DialogTitle>Add New Module</DialogTitle>
+              <DialogDescription>
+                Fill in the details below to add a new module to the database.
+              </DialogDescription>
             </DialogHeader>
             <ModuleForm setOpen={setIsCreateOpen} />
           </DialogContent>
