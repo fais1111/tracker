@@ -20,7 +20,6 @@ export const createModule = (firestore: Firestore, moduleData: Omit<Module, 'id'
   
   addDoc(modulesCollection, {
     ...moduleData,
-    createdAt: serverTimestamp(),
   }).catch(error => {
     console.error("Error creating module: ", error);
     const permissionError = new FirestorePermissionError({
@@ -44,7 +43,6 @@ export const updateModule = (
 
   updateDoc(moduleRef, {
     ...moduleData,
-    updatedAt: serverTimestamp(),
   }).catch(error => {
     console.error("Error updating module: ", error);
     const permissionError = new FirestorePermissionError({

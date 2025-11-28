@@ -1,7 +1,7 @@
 "use client";
 
 import { Table } from "@tanstack/react-table";
-import { FileDown, PlusCircle, FileText, FileSpreadsheet } from "lucide-react";
+import { FileDown, PlusCircle, FileText, FileSpreadsheet, Database } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DataTableViewOptions } from "./data-table-view-options";
@@ -16,6 +16,8 @@ import type { Module } from "@/lib/types";
 import { useFirestore } from "@/firebase";
 import { createModule } from "@/lib/firestore-mutations";
 import { useToast } from "@/hooks/use-toast";
+import { initialModules } from "@/lib/data";
+import { addDoc, collection, writeBatch } from "firebase/firestore";
 
 
 interface DataTableToolbarProps<TData> {
@@ -178,6 +180,42 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
     reader.readAsArrayBuffer(file);
   }
 
+  const handleSeedDatabase = () => {
+    if (!firestore) {
+      toast({
+        variant: "destructive",
+        title: "Database Error",
+        description: "Firestore is not initialized.",
+      });
+      return;
+    }
+
+    startTransition(async () => {
+      try {
+        const modulesCollection = collection(firestore, 'modules');
+        const batch = writeBatch(firestore);
+
+        for (const moduleData of initialModules) {
+          const docRef = doc(modulesCollection); // Create a new document reference with an auto-generated ID
+          batch.set(docRef, moduleData);
+        }
+
+        await batch.commit();
+        toast({
+          title: "Database Seeded",
+          description: `Successfully added ${initialModules.length} modules.`,
+        });
+      } catch (error) {
+        console.error("Database seeding failed:", error);
+        toast({
+          variant: "destructive",
+          title: "Seeding Failed",
+          description: error instanceof Error ? error.message : "An unexpected error occurred during seeding.",
+        });
+      }
+    });
+  };
+
   return (
     <div className="flex items-center justify-between py-4">
       <div className="flex flex-1 items-center space-x-2">
@@ -191,6 +229,10 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
         />
       </div>
       <div className="flex items-center space-x-2">
+        <Button variant="outline" size="sm" onClick={handleSeedDatabase} disabled={isPending}>
+          <Database className="mr-2 h-4 w-4" />
+          Seed Database
+        </Button>
         <Button variant="outline" size="sm" onClick={handleExportPDF}>
           <FileText className="mr-2 h-4 w-4" />
           Export PDF
