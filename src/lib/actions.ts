@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { getFirestore } from 'firebase-admin/firestore';
-import { initializeApp, getApps, cert } from 'firebase-admin/app';
+import { initializeApp, getApps, App } from 'firebase-admin/app';
 import { firebaseConfig } from '@/firebase/config';
 
 // Schema for creating a module (ID is not present)
@@ -24,20 +24,16 @@ const updateModuleSchema = createModuleSchema.extend({
   id: z.string().min(1, 'ID is required.'),
 });
 
-// Helper function to initialize Firebase Admin SDK on the server
-// This should only be called within server actions
-function getDb() {
-  if (getApps().length === 0) {
-    // In a real-world server environment, you would use a service account.
-    // For this development environment, we'll use a simplified check.
-    // NOTE: The service account is not available here, so we will initialize without it.
-    // This relies on the environment providing default credentials.
-    initializeApp({
-      projectId: firebaseConfig.projectId,
-    });
-  }
-  return getFirestore();
+let app: App;
+if (!getApps().length) {
+  app = initializeApp({
+    projectId: firebaseConfig.projectId,
+  });
+} else {
+  app = getApps()[0];
 }
+const db = getFirestore(app);
+
 
 type ActionState = {
   success: boolean;
@@ -62,7 +58,6 @@ export async function createModule(
   }
 
   try {
-    const db = getDb();
     const modulesCollection = db.collection('modules');
     await modulesCollection.add({
       ...validatedFields.data,
@@ -99,7 +94,6 @@ export async function updateModule(
 
   try {
     const { id, ...dataToUpdate } = validatedFields.data;
-    const db = getDb();
     const moduleRef = db.collection('modules').doc(id);
     await moduleRef.update({
       ...dataToUpdate,
