@@ -4,35 +4,19 @@
  * @description Firestore Security Rules for the ModuleTrack application.
  *
  * ## Core Philosophy
- * This ruleset implements a Role-Based Access Control (RBAC) model. A user's
- * role, specifically whether they are an 'admin', dictates their permissions.
- * Administrative privileges are determined by the corresponding
- * document in the `/roles_admin` collection. This provides a clear, database-driven
- * way to manage high-level permissions. Regular users have read-only access to
- * shared data and can only manage their own user profile.
+ * This ruleset implements a completely open model for the `modules` collection,
+ * as there is no user authentication in the application. This allows any client
+to perform read, create, update, and delete operations on module data.
  *
  * ## Data Structure
  * The data is organized into three distinct top-level collections:
- * - `/modules/{moduleId}`: Contains the core application data for tracking modules.
- * - `/users/{userId}`: Stores individual user profile information.
- * - `/roles_admin/{userId}`: A lookup collection where the existence of a
- *   document signifies that the user is an administrator.
+ * - `/modules/{moduleId}`: Contains the core application data for tracking modules. This is publicly accessible.
+ * - `/users/{userId}`: Stores individual user profile information. Access is restricted.
+ * - `/roles_admin/{userId}`: A lookup collection for administrative roles. Access is restricted.
  *
  * ## Key Security Decisions
- * - Admin Role Management: The `/roles_admin` collection is the single source
- *   of truth for admin status. To prevent client-side privilege escalation, this
- *   collection is read-only for all users. Admin roles must be managed via a
- *   trusted server environment (e.g., using the Firebase Admin SDK).
- * - Module Access: The modules collection is publicly readable and writable for this
- *   version of the application.
- * - User Data Privacy: Users can create and update their own profile in the `/users`
- *   collection. Listing all users is explicitly forbidden to protect user privacy.
- *
- * ## Denormalization for Authorization
- * The primary use of denormalization for authorization is the `/roles_admin`
- * collection. Instead of relying on slow and costly custom claims, a simple and
- * fast `exists()` check against this collection determines if a user is an admin,
- * making rules across the database efficient and easy to understand.
+ * - Public Module Access: The `/modules` collection is intentionally open for all CRUD (Create, Read, Update, Delete) operations.
+ * - User Data Privacy: The `/users` and `/roles_admin` collections remain protected, although they are not currently used by the application, to prevent unauthorized access.
  */
 rules_version = '2';
 service cloud.firestore {
