@@ -3,12 +3,8 @@
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { getFirestore } from 'firebase-admin/firestore';
-import { initializeServerApp } from '@/firebase/server';
-import { FieldValue } from 'firebase-admin/firestore';
-
-// Initialize the server-side Firebase app
-initializeServerApp();
-const db = getFirestore();
+import { initializeApp, getApps, cert } from 'firebase-admin/app';
+import { firebaseConfig } from '@/firebase/config';
 
 // Schema for creating a module (ID is not present)
 const createModuleSchema = z.object({
@@ -28,6 +24,20 @@ const updateModuleSchema = createModuleSchema.extend({
   id: z.string().min(1, 'ID is required.'),
 });
 
+// Helper function to initialize Firebase Admin SDK on the server
+// This should only be called within server actions
+function getDb() {
+  if (getApps().length === 0) {
+    // In a real-world server environment, you would use a service account.
+    // For this development environment, we'll use a simplified check.
+    // NOTE: The service account is not available here, so we will initialize without it.
+    // This relies on the environment providing default credentials.
+    initializeApp({
+      projectId: firebaseConfig.projectId,
+    });
+  }
+  return getFirestore();
+}
 
 type ActionState = {
   success: boolean;
@@ -52,30 +62,31 @@ export async function createModule(
   }
 
   try {
+    const db = getDb();
     const modulesCollection = db.collection('modules');
     await modulesCollection.add({
       ...validatedFields.data,
-      createdAt: FieldValue.serverTimestamp(),
+      createdAt: new Date().toISOString(),
     });
 
     revalidatePath('/');
     return { success: true };
   } catch (e) {
-    console.error('Error creating module:', e);
+    const errorMessage = e instanceof Error ? e.message : 'Unknown error';
+    console.error('Error creating module:', errorMessage);
     return {
       success: false,
-      message: 'Something went wrong on the server. Please try again.',
+      message: `Something went wrong on the server: ${errorMessage}. Please try again.`,
     };
   }
 }
-
 
 export async function updateModule(
   prevState: any,
   formData: FormData
 ): Promise<ActionState> {
   const rawData = Object.fromEntries(formData.entries());
-   rawData.signedReport = rawData.signedReport === 'on';
+  rawData.signedReport = rawData.signedReport === 'on';
 
   const validatedFields = updateModuleSchema.safeParse(rawData);
 
@@ -88,21 +99,22 @@ export async function updateModule(
 
   try {
     const { id, ...dataToUpdate } = validatedFields.data;
-    
+    const db = getDb();
     const moduleRef = db.collection('modules').doc(id);
     await moduleRef.update({
       ...dataToUpdate,
-      lastUpdatedAt: FieldValue.serverTimestamp(),
+      lastUpdatedAt: new Date().toISOString(),
     });
 
     revalidatePath('/');
     return { success: true };
 
   } catch (e) {
-    console.error('Error updating module:', e);
+    const errorMessage = e instanceof Error ? e.message : 'Unknown error';
+    console.error('Error updating module:', errorMessage);
     return {
       success: false,
-      message: 'Something went wrong on the server. Please try again.',
+      message: `Something went wrong on the server: ${errorMessage}. Please try again.`,
     };
   }
 }
