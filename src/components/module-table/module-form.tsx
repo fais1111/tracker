@@ -4,7 +4,7 @@ import { useEffect, useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { saveModule } from '@/lib/actions';
+import { createModule, updateModule } from '@/lib/actions';
 import type { Module } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,27 +35,33 @@ function SubmitButton({ isEditing }: { isEditing: boolean }) {
 }
 
 export function ModuleForm({ module, setOpen }: ModuleFormProps) {
-  const initialState = { success: false, errors: [] };
-  const [state, dispatch] = useActionState(saveModule, initialState);
+  const isEditing = !!module;
+  const initialState = { success: false, errors: [], message: '' };
+  
+  const action = isEditing ? updateModule : createModule;
+  const [state, dispatch] = useActionState(action, initialState);
   const { toast } = useToast();
 
   useEffect(() => {
     if (state.success) {
       toast({
-        title: `Module ${module ? 'updated' : 'created'} successfully.`,
+        title: `Module ${isEditing ? 'updated' : 'created'} successfully.`,
       });
       setOpen(false);
+    } else if (state.message) {
+      toast({
+        title: 'An error occurred',
+        description: state.message,
+        variant: 'destructive',
+      });
     } else if (state.errors && state.errors.length > 0) {
-      const formError = state.errors.find(e => e.path?.[0] === 'form');
-      if (formError) {
-         toast({
-          title: 'An error occurred',
-          description: formError.message,
-          variant: 'destructive',
-        });
-      }
+       toast({
+        title: 'Validation Error',
+        description: 'Please check the form fields for errors.',
+        variant: 'destructive',
+      });
     }
-  }, [state, module, setOpen, toast]);
+  }, [state, isEditing, setOpen, toast]);
 
   const findError = (path: string) => state.errors?.find(e => e.path?.[0] === path)?.message;
 

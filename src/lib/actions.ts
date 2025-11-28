@@ -4,11 +4,9 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { initializeFirebase } from '@/firebase';
 import { collection, addDoc, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
-import type { Module } from '@/lib/types';
 
-// This schema defines the shape of the data for both creating and updating modules.
-const moduleSchema = z.object({
-  id: z.string().optional(),
+// Schema for creating a module (ID is not present)
+const createModuleSchema = z.object({
   moduleNo: z.string().min(1, 'Module No. is required.'),
   yard: z.string().min(1, 'Yard is required.'),
   location: z.string().min(1, 'Location is required.'),
@@ -20,65 +18,88 @@ const moduleSchema = z.object({
   signedReport: z.boolean().default(false),
 });
 
-type SaveModuleResult = {
+// Schema for updating a module (ID is required)
+const updateModuleSchema = createModuleSchema.extend({
+  id: z.string().min(1, 'ID is required.'),
+});
+
+
+type ActionState = {
   success: boolean;
   errors?: z.ZodError['errors'];
+  message?: string;
 };
 
-export async function saveModule(
+export async function createModule(
   prevState: any,
   formData: FormData
-): Promise<SaveModuleResult> {
-
+): Promise<ActionState> {
   const rawData = Object.fromEntries(formData.entries());
-  
-  // Convert checkbox value
   rawData.signedReport = rawData.signedReport === 'on';
 
-  const validatedFields = moduleSchema.safeParse(rawData);
+  const validatedFields = createModuleSchema.safeParse(rawData);
 
-  // If validation fails, return the errors.
   if (!validatedFields.success) {
     return {
       success: false,
       errors: validatedFields.error.errors,
     };
   }
-  
+
   try {
     const { firestore } = initializeFirebase();
-    const { id, ...dataToSave } = validatedFields.data;
+    const modulesCollection = collection(firestore, 'modules');
+    await addDoc(modulesCollection, {
+      ...validatedFields.data,
+      createdAt: serverTimestamp(),
+    });
 
-    if (id) {
-      // If an ID is present, update the existing document.
-      const moduleRef = doc(firestore, 'modules', id);
-      await updateDoc(moduleRef, {
-        ...dataToSave,
-        lastUpdatedAt: serverTimestamp(),
-      });
-    } else {
-      // If no ID is present, create a new document.
-      const modulesCollection = collection(firestore, 'modules');
-      await addDoc(modulesCollection, {
-        ...dataToSave,
-        createdAt: serverTimestamp(),
-      });
-    }
+    revalidatePath('/');
+    return { success: true };
+  } catch (e) {
+    console.error('Error creating module:', e);
+    return {
+      success: false,
+      message: 'Something went wrong on the server. Please try again.',
+    };
+  }
+}
 
-    // Revalidate the page to show the new/updated data.
+
+export async function updateModule(
+  prevState: any,
+  formData: FormData
+): Promise<ActionState> {
+  const rawData = Object.fromEntries(formData.entries());
+  rawData.signedReport = rawData.signedReport === 'on';
+
+  const validatedFields = updateModuleSchema.safeParse(rawData);
+
+  if (!validatedFields.success) {
+    return {
+      success: false,
+      errors: validatedFields.error.errors,
+    };
+  }
+
+  try {
+    const { firestore } = initializeFirebase();
+    const { id, ...dataToUpdate } = validatedFields.data;
+    
+    const moduleRef = doc(firestore, 'modules', id);
+    await updateDoc(moduleRef, {
+      ...dataToUpdate,
+      lastUpdatedAt: serverTimestamp(),
+    });
+
     revalidatePath('/');
     return { success: true };
 
   } catch (e) {
-    console.error('Error saving module:', e);
-    // In case of a server error, return a generic error message.
+    console.error('Error updating module:', e);
     return {
       success: false,
-      errors: [{
-        code: "custom",
-        path: ["form"],
-        message: 'Something went wrong on the server. Please try again.',
-      }],
+      message: 'Something went wrong on the server. Please try again.',
     };
   }
 }
