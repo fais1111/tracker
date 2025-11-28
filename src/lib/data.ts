@@ -278,7 +278,7 @@ export const initialModules: Omit<Module, 'id'>[] = [
     "rfloDateStatus": "Date Confirmed",
     "rfloDate": "",
     "yardReport": "",
-s    "islandReport": "",
+    "islandReport": "",
     "signedReport": false
   },
   {
@@ -2184,7 +2184,7 @@ s    "islandReport": "",
     "shipmentDate": "",
     "shipmentNo": "",
     "rfloDateStatus": "Pending",
-ar    "rfloDate": "",
+    "rfloDate": "",
     "yardReport": "",
     "islandReport": "",
     "signedReport": false
