@@ -99,6 +99,17 @@ export const columns: ColumnDef<Module>[] = [
     size: 250,
   },
   {
+    id: "combinedReport",
+    header: "Combined Report",
+    cell: ({ row }) => {
+      const yardReport = row.original.yardReport;
+      const islandReport = row.original.islandReport;
+      const combined = [yardReport, islandReport].filter(Boolean).join(" | ");
+      return <div className="truncate max-w-[300px]">{combined || "-"}</div>;
+    },
+    size: 300,
+  },
+  {
     accessorKey: "byWhom",
     header: "By Whom",
      cell: ({ row }) => {
