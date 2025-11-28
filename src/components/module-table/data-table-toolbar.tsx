@@ -81,31 +81,31 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
   };
 
   return (
-    <div className="flex items-center justify-between py-4">
-      <div className="flex flex-1 items-center space-x-2">
+    <div className="flex flex-col md:flex-row items-center justify-between gap-4 py-4">
+      <div className="w-full md:w-auto">
         <Input
           placeholder="Filter by Module No..."
           value={(table.getColumn('moduleNo')?.getFilterValue() as string) ?? ''}
           onChange={(event) =>
             table.getColumn('moduleNo')?.setFilterValue(event.target.value)
           }
-          className="h-10 w-[150px] lg:w-[250px]"
+          className="h-10 w-full md:w-[250px]"
         />
       </div>
-      <div className="flex items-center space-x-2">
-        <Button variant="outline" size="sm" onClick={handleExportPDF}>
+      <div className="flex w-full md:w-auto items-center justify-start flex-wrap gap-2">
+        <Button variant="outline" size="sm" onClick={handleExportPDF} className="flex-grow md:flex-grow-0">
           <FileText className="mr-2 h-4 w-4" />
-          Export PDF
+          PDF
         </Button>
-        <Button variant="outline" size="sm" onClick={handleExportExcel}>
+        <Button variant="outline" size="sm" onClick={handleExportExcel} className="flex-grow md:flex-grow-0">
           <FileSpreadsheet className="mr-2 h-4 w-4" />
-          Export Excel
+          Excel
         </Button>
         <Dialog open={isImportOpen} onOpenChange={setIsImportOpen}>
           <DialogTrigger asChild>
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" className="flex-grow md:flex-grow-0">
               <FileDown className="mr-2 h-4 w-4" />
-              Import Data
+              Import
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[600px]">
@@ -120,7 +120,7 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
         </Dialog>
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogTrigger asChild>
-            <Button size="sm">
+            <Button size="sm" className="flex-grow md:flex-grow-0">
               <PlusCircle className="mr-2 h-4 w-4" />
               Add Module
             </Button>
