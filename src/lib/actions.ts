@@ -36,7 +36,10 @@ export async function updateModule(data: z.infer<typeof updateModuleSchema>) {
     const { firestore } = initializeFirebase();
     const { id, ...moduleData } = validation.data;
     const moduleRef = doc(firestore, 'modules', id);
-    await updateDoc(moduleRef, moduleData);
+    await updateDoc(moduleRef, {
+      ...moduleData,
+      signedReport: moduleData.signedReport ?? false,
+    });
     revalidatePath('/');
     return { success: true, data: { id, ...moduleData } };
   } catch (e: any) {
@@ -60,7 +63,6 @@ export async function addModule(
     const newModuleData = validation.data;
     const docRef = await addDoc(collection(firestore, 'modules'), {
         ...newModuleData,
-        // Ensure signedReport has a default value if not provided
         signedReport: newModuleData.signedReport ?? false,
     });
     revalidatePath('/');
