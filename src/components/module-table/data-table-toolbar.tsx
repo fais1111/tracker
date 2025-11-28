@@ -39,7 +39,8 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
         module.moduleNo,
         module.shipmentDate,
         module.shipmentNo,
-        module.rfloDateStatus,
+        module.surveyStatusYard,
+        module.surveyStatusIsland,
         module.yardReport,
         module.islandReport,
         module.combinedReport,
@@ -48,7 +49,7 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
     });
 
     autoTable(doc, {
-      head: [['Yard', 'Location', 'Module No.', 'Shipment Date', 'Shipment No#', 'RFLO Status', 'Yard Report', 'Island Report', 'Combined Report', 'Signed']],
+      head: [['Yard', 'Location', 'Module No.', 'Shipment Date', 'Shipment No#', 'Survey Status Yard', 'Survey Status Island', 'Yard Report', 'Island Report', 'Combined Report', 'Signed']],
       body: tableData,
     });
 
@@ -64,7 +65,8 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
         'Module No.': module.moduleNo,
         'Shipment Date': module.shipmentDate,
         'Shipment No#': module.shipmentNo,
-        'RFLO Status': module.rfloDateStatus,
+        'Survey Status Yard': module.surveyStatusYard,
+        'Survey Status Island': module.surveyStatusIsland,
         'Yard Report': module.yardReport,
         'Island Report': module.islandReport,
         'Combined Report': module.combinedReport,

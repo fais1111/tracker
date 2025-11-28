@@ -5,7 +5,8 @@ export type Module = {
   moduleNo: string;
   shipmentDate: string;
   shipmentNo: string;
-  rfloDateStatus: string;
+  surveyStatusYard: 'Done' | 'Not Done';
+  surveyStatusIsland: 'Done' | 'Not Done';
   yardReport: string;
   islandReport: string;
   combinedReport: string;

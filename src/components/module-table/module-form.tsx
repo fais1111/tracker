@@ -104,15 +104,26 @@ export function ModuleForm({ module, setOpen }: ModuleFormProps) {
           <Input id="shipmentNo" name="shipmentNo" defaultValue={module?.shipmentNo} />
         </div>
         <div>
-          <Label htmlFor="rfloDateStatus">RFLO Date Status</Label>
-          <Select name="rfloDateStatus" defaultValue={module?.rfloDateStatus || 'Pending'}>
-            <SelectTrigger id="rfloDateStatus">
+          <Label htmlFor="surveyStatusYard">Survey Status Yard</Label>
+          <Select name="surveyStatusYard" defaultValue={module?.surveyStatusYard || 'Not Done'}>
+            <SelectTrigger id="surveyStatusYard">
               <SelectValue placeholder="Select a status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="Date Confirmed">Date Confirmed</SelectItem>
-              <SelectItem value="1st Quarter-2026">1st Quarter-2026</SelectItem>
-              <SelectItem value="Pending">Pending</SelectItem>
+              <SelectItem value="Done">Done</SelectItem>
+              <SelectItem value="Not Done">Not Done</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label htmlFor="surveyStatusIsland">Survey Status Island</Label>
+          <Select name="surveyStatusIsland" defaultValue={module?.surveyStatusIsland || 'Not Done'}>
+            <SelectTrigger id="surveyStatusIsland">
+              <SelectValue placeholder="Select a status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Done">Done</SelectItem>
+              <SelectItem value="Not Done">Not Done</SelectItem>
             </SelectContent>
           </Select>
         </div>

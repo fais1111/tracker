@@ -60,13 +60,24 @@ export const columns: ColumnDef<Module>[] = [
     header: "Shipment No#",
   },
   {
-    accessorKey: "rfloDateStatus",
-    header: "RFLO Status",
+    accessorKey: "surveyStatusYard",
+    header: "Survey Status Yard",
     cell: ({ row }) => {
-      const status = row.getValue("rfloDateStatus") as string;
+      const status = row.getValue("surveyStatusYard") as string;
       if (!status) return null;
-      const variant: "default" | "secondary" | "outline" =
-        status.toLowerCase() === "date confirmed" ? "default" : status.toLowerCase().includes("quarter") ? "secondary" : "outline";
+      const variant: "default" | "secondary" =
+        status === "Done" ? "default" : "secondary";
+      return <Badge variant={variant}>{status}</Badge>;
+    },
+  },
+  {
+    accessorKey: "surveyStatusIsland",
+    header: "Survey Status Island",
+    cell: ({ row }) => {
+      const status = row.getValue("surveyStatusIsland") as string;
+      if (!status) return null;
+      const variant: "default" | "secondary" =
+        status === "Done" ? "default" : "secondary";
       return <Badge variant={variant}>{status}</Badge>;
     },
   },
